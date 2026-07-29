@@ -8,8 +8,8 @@ Hardware store — fer/acier, ciment, plomberie, electricite, outillage, peintur
 
 ## Modules
 
-### Shared (7)
-`mod_Config`, `mod_Dashboard`, `mod_DemoData`, `mod_StockEngine`, `mod_SupplierRegistry`, `mod_Barcode`, `mod_Reports`
+### Shared (7) — canonical copies
+`mod_Config` (13.2 KB), `mod_Dashboard` (12.7 KB), `mod_DemoData` (38.3 KB), `mod_StockEngine` (22.6 KB), `mod_SupplierRegistry` (13.6 KB), `mod_Barcode` (10.4 KB), `mod_Reports` (13.9 KB)
 
 ### Hardware-Specific (19)
 | Module | Purpose |

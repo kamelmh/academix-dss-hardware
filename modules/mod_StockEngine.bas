@@ -1,55 +1,64 @@
 Attribute VB_Name = "mod_StockEngine"
 ' ============================================================================
-' Academix v13.2 - DSS Logistique El Bayadh
+' Academix v14.0 - DSS Quincaillerie El Bayadh
 ' Copyright (c) 2025-2026 Mahi Kamel Abdelghani
+' Stock Engine - Reads from CONFIG sheet (no hardcoded values)
 ' ============================================================================
 
 Option Explicit
 
-Public Type ArticleDetails
-    Code        As String
-    Designation As String
-    Category    As String
-    PU          As Double
-    Stock       As Long
-End Type
-
-' ... (existing code)
-
-
-' ================================================================================
-' CONSTANTS ? Synchronized with Unit� de traitement VBA GROUND_TRUTH
-' ================================================================================
-Private Const ORDER_COST_S  As Double = 801.45 ' DZD ? full order cycle cost (field-refined from 500)
-Private Const HOLDING_RATE  As Double = 0.2    ' 20% of unit price per year
-Private Const LEAD_TIME_DEFAULT As Integer = 2 ' Default delivery days
-
-' Article-specific safety stocks ? mirrors Unité de traitement VBA GROUND_TRUTH (Calibrated v13.4 from v7 historical)
-Public Function GetSafetyStock(ByVal sku As String) As Double
-    Select Case UCase(Trim(sku))
-        Case "ART-001": GetSafetyStock = 400  ' Papier A4 (v7 Stock Min)
-        Case "ART-002": GetSafetyStock = 200  ' Toner G030 (case study value)
-        Case "ART-003": GetSafetyStock = 30   ' Papier A3 (v7 Stock Min)
-        Case "ART-004": GetSafetyStock = 20   ' Boîte archives (v7 Stock Min)
-        Case "ART-005": GetSafetyStock = 2    ' Agrafeuse (v7 Stock Min)
-        Case "ART-006": GetSafetyStock = 5    ' Stylos (v7 Stock Min)
-        Case "ART-007": GetSafetyStock = 2    ' Registre 5m (v7 Stock Min)
-        Case "ART-008": GetSafetyStock = 2    ' Encre tampon (v7 Stock Min)
-        Case "ART-009": GetSafetyStock = 10   ' Sous-chemise (v7 Stock Min)
-        Case "ART-010": GetSafetyStock = 5    ' Chemise (v7 Stock Min)
-        Case "ART-011": GetSafetyStock = 1    ' Fax (v7 Stock Min)
-        Case "ART-012": GetSafetyStock = 5    ' Marqueur (v7 Stock Min)
-        Case "ART-013": GetSafetyStock = 10   ' Encre cachets (v7 Stock Min)
-        Case "ART-014": GetSafetyStock = 5    ' Classeur (v7 Stock Min)
-        Case "ART-015": GetSafetyStock = 39   ' Toner générique (v7 Stock Min)
-        Case Else:      GetSafetyStock = 50
-    End Select
+' ============================================================================
+' FUNCTION: GetOrderCost
+' Reads order cost from CONFIG sheet (no hardcoded value)
+' ============================================================================
+Public Function GetOrderCost() As Double
+    GetOrderCost = mod_Config.ORDER_COST
 End Function
 
-' ================================================================================
+' ============================================================================
+' FUNCTION: GetHoldingRate
+' Reads holding rate from CONFIG sheet (no hardcoded value)
+' ============================================================================
+Public Function GetHoldingRate() As Double
+    GetHoldingRate = mod_Config.HOLDING_RATE
+End Function
+
+' ============================================================================
+' FUNCTION: GetLeadTime
+' Reads lead time from CONFIG sheet (no hardcoded value)
+' ============================================================================
+Public Function GetLeadTime() As Integer
+    GetLeadTime = mod_Config.LEAD_TIME_DEFAULT
+End Function
+
+' ============================================================================
+' FUNCTION: GetSafetyStock
+' Reads safety stock from ARTICLES sheet column 10
+' ============================================================================
+Public Function GetSafetyStock(ByVal sku As String) As Double
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    
+    If wsArt Is Nothing Then GetSafetyStock = 50: Exit Function
+    
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    
+    If IsError(foundRow) Then
+        GetSafetyStock = 50
+    Else
+        Dim ss As Double: ss = Val(wsArt.Cells(foundRow, COL_ART_STOCK_SECURITE).Value)
+        If ss > 0 Then GetSafetyStock = ss Else GetSafetyStock = 50
+    End If
+End Function
+
+' ============================================================================
 ' FUNCTION: ComputeEOQ
 ' Formula: Q* = SQRT(2 x D x S / (P x t))
-' ================================================================================
+' All parameters read from CONFIG sheet
+' ============================================================================
 Public Function ComputeEOQ(ByVal AnnualDemand As Double, _
                             ByVal unitPrice As Double) As Double
     If unitPrice <= 0 Or AnnualDemand <= 0 Then
@@ -57,116 +66,30 @@ Public Function ComputeEOQ(ByVal AnnualDemand As Double, _
         Exit Function
     End If
 
-    Dim holdingCostH As Double
-    holdingCostH = unitPrice * HOLDING_RATE
+    Dim orderCost As Double: orderCost = GetOrderCost()
+    Dim holdingRate As Double: holdingRate = GetHoldingRate()
+    Dim holdingCostH As Double: holdingCostH = unitPrice * holdingRate
 
-    ComputeEOQ = Sqr((2 * AnnualDemand * ORDER_COST_S) / holdingCostH)
+    If holdingCostH = 0 Then ComputeEOQ = 0: Exit Function
+    ComputeEOQ = Sqr((2 * AnnualDemand * orderCost) / holdingCostH)
 End Function
 
-' ================================================================================
+' ============================================================================
 ' FUNCTION: ComputeROP
 ' Formula: ROP = (avg_daily_demand x lead_time) + safety_stock
-' Added: Session 22 - was referenced by mod_StockEngine.ValidateStockLevel,
-'       mod_Dashboard (2 sites), mod_UI_Setup.DrawStockoutBanner, mod_Procurement
-'       but the function itself was missing. Signature mirrors external
-'       reference (external/lsm-vba-core) so 2-arg callsites work via the
-'       Optional default on LeadTimeDays.
-' ================================================================================
+' Lead time read from CONFIG sheet
+' ============================================================================
 Public Function ComputeROP(ByVal AvgDailyDemand As Double, _
                             ByVal sku As String, _
-                            Optional ByVal LeadTimeDays As Integer = LEAD_TIME_DEFAULT) As Double
+                            Optional ByVal LeadTimeDays As Integer = -1) As Double
+    If LeadTimeDays = -1 Then LeadTimeDays = GetLeadTime()
     ComputeROP = (AvgDailyDemand * LeadTimeDays) + GetSafetyStock(sku)
 End Function
 
-' ================================================================================
-' FUNCTION: GetServices
-' Returns a list of services from the SYS_STRINGS sheet.
-' ================================================================================
-Public Function GetServices() As Collection
-    Dim services As New Collection
-    Dim wsStr As Worksheet
-    Dim lastRow As Long, i As Long
-    
-    On Error Resume Next
-    Set wsStr = ThisWorkbook.Sheets(mod_Config.SHEET_SYS_STRINGS)
-    On Error GoTo 0
-    
-    If Not wsStr Is Nothing Then
-        lastRow = wsStr.Cells(wsStr.Rows.count, COL_SYS_ID).End(xlUp).Row
-        For i = 2 To lastRow
-            If Left(Trim(CStr(wsStr.Cells(i, COL_SYS_ID).Value)), 4) = "SVC_" Then
-                services.Add Trim(CStr(wsStr.Cells(i, COL_SYS_VALUE).Value))
-            End If
-        Next i
-    End If
-    
-    If services.count = 0 Then
-        services.Add "Service 1"
-        services.Add "Service 2"
-        services.Add "Fournisseur Externe"
-    End If
-    
-    Set GetServices = services
-End Function
-
-' ================================================================================
-' FUNCTION: GetArticles
-' Returns a list of articles (Code | Designation) from the ARTICLES sheet.
-' ================================================================================
-Public Function GetArticles(ByVal filterCat As String) As Collection
-    Dim articles As New Collection
-    Dim wsArt As Worksheet
-    Dim lastRow As Long, i As Long
-    Dim code As String, desig As String, cat As String
-    Dim noFilter As Boolean
-
-    On Error Resume Next
-    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    On Error GoTo 0
-
-    If wsArt Is Nothing Then
-        articles.Add "ART-001 | Papier A4 80g/m²"
-        articles.Add "ART-002 | Toner G030 (noir)"
-        articles.Add "ART-003 | Papier A3 80g/m²"
-        articles.Add "ART-004 | Boîte archives carton"
-        articles.Add "ART-005 | Agrafeuse de bureau"
-        articles.Add "ART-006 | Stylos bille boîte/50"
-        articles.Add "ART-007 | Registre grand format 5m"
-        articles.Add "ART-008 | Encre tampon"
-        articles.Add "ART-009 | Sous-chemise carton"
-        articles.Add "ART-010 | Chemise cartonnée"
-        articles.Add "ART-011 | Rouleau papier fax"
-        articles.Add "ART-012 | Marqueur permanent noir"
-        articles.Add "ART-013 | Encre pour cachets"
-        articles.Add "ART-014 | Classeur à levier"
-        articles.Add "ART-015 | Cartouche toner générique"
-        Set GetArticles = articles
-        Exit Function
-    End If
-
-    noFilter = (filterCat = "" Or filterCat = "(Toutes)")
-    lastRow = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row
-
-    For i = 3 To lastRow
-        code = Trim(CStr(wsArt.Cells(i, COL_ART_CODE).Value))
-        desig = Trim(CStr(wsArt.Cells(i, COL_ART_DESIGNATION).Value))
-        cat = Trim(CStr(wsArt.Cells(i, COL_ART_CATEGORIE).Value))
-
-        If code <> "" Then
-            If noFilter Or (cat = filterCat) Then
-                articles.Add code & " | " & desig
-            End If
-        End If
-    Next i
-
-    Set GetArticles = articles
-End Function
-
-
-' ================================================================================
+' ============================================================================
 ' SUB: ValidateStockLevel
 ' Fires a UI alert if current stock breaches ROP.
-' ================================================================================
+' ============================================================================
 Public Sub ValidateStockLevel(ByVal sku As String, _
                                ByVal CurrentStock As Double, _
                                ByVal AnnualDemand As Double, _
@@ -179,7 +102,12 @@ Public Sub ValidateStockLevel(ByVal sku As String, _
 
     If CurrentStock <= rop Then
         Dim eoq As Double: eoq = ComputeEOQ(AnnualDemand, unitPrice)
-        Dim alertLevel As String: alertLevel = IIf(CurrentStock <= ss, "RUPTURE IMMINENTE", "SEUIL D'ALERTE ATTEINT")
+        Dim alertLevel As String
+        If CurrentStock <= ss Then
+            alertLevel = "RUPTURE IMMINENTE"
+        Else
+            alertLevel = "SEUIL D'ALERTE ATTEINT"
+        End If
 
         MsgBox alertLevel & vbCrLf & vbCrLf & _
                "Article  : " & sku & vbCrLf & _
@@ -191,12 +119,11 @@ Public Sub ValidateStockLevel(ByVal sku As String, _
     End If
 End Sub
 
-' ================================================================================
-' FUNCTION: GetArticleDetails
-' Returns a complete ArticleDetails struct for a given SKU.
-' ================================================================================
-Public Function GetArticleDetails(ByVal sku As String) As ArticleDetails
-    Dim details As ArticleDetails
+' ============================================================================
+' FUNCTION: GetArticleStock
+' Returns current stock quantity for an article (reads from ARTICLES sheet)
+' ============================================================================
+Public Function GetArticleStock(ByVal sku As String) As Double
     Dim wsArt As Worksheet
     Dim foundRow As Variant
     
@@ -204,115 +131,289 @@ Public Function GetArticleDetails(ByVal sku As String) As ArticleDetails
     Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
     On Error GoTo 0
     
-    If wsArt Is Nothing Then
-        details.Code = sku
-        GetArticleDetails = details
-        Exit Function
-    End If
+    If wsArt Is Nothing Then GetArticleStock = 0: Exit Function
     
-    foundRow = Application.Match(sku, wsArt.Columns(COL_ART_CODE), 0)
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
     
     If IsError(foundRow) Then
-        details.Code = sku
-        details.Stock = 0
-        GetArticleDetails = details
-        Exit Function
+        GetArticleStock = 0
+    Else
+        GetArticleStock = Val(wsArt.Cells(foundRow, COL_ART_STOCK).Value)
     End If
-    
-    details.Code = Trim(CStr(wsArt.Cells(foundRow, COL_ART_CODE).Value))
-    details.Designation = Trim(CStr(wsArt.Cells(foundRow, COL_ART_DESIGNATION).Value))
-    details.Category = Trim(CStr(wsArt.Cells(foundRow, COL_ART_CATEGORIE).Value))
-    details.PU = CDbl(mod_Utilities.SafeVal(wsArt.Cells(foundRow, COL_ART_PU).Value))
-    details.Stock = CLng(mod_Utilities.SafeVal(wsArt.Cells(foundRow, COL_ART_STOCK).Value))
-    
-    GetArticleDetails = details
 End Function
 
-' ================================================================================
+' ============================================================================
 ' SUB: UpdateArticleStockBalance
-' Directly updates the stock quantity in the ARTICLES sheet based on movements.
-' ================================================================================
+' Updates stock quantity in ARTICLES sheet based on movements
+' Error handling: Guaranteed sheet re-protection on any failure
+' ============================================================================
 Public Sub UpdateArticleStockBalance(ByVal artCode As String, ByVal mvtSign As String, ByVal qty As Long)
+    On Error GoTo ErrorHandler
+    
     Dim wsArt As Worksheet
     Dim foundRow As Variant
     
-    On Error Resume Next
-    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    On Error GoTo 0
-    
+    ' Safely open sheet
+    Set wsArt = mod_ErrorHandler.SafeOpenSheet(mod_Config.SHEET_ARTICLES)
     If wsArt Is Nothing Then Exit Sub
     
-    foundRow = Application.Match(artCode, wsArt.Columns(COL_ART_CODE), 0)
+    foundRow = Application.Match(artCode, wsArt.Range("A:A"), 0)
     
     If Not IsError(foundRow) Then
-        wsArt.Unprotect Password:=mod_Config.MASTER_PWD
-        
-        Dim currentQty As Double: currentQty = Val(wsArt.Cells(foundRow, COL_ART_STOCK).Value) ' Column C: Stock
+        Dim currentQty As Double: currentQty = Val(wsArt.Cells(foundRow, COL_ART_STOCK).Value)
         
         If mvtSign = "IN" Then
             wsArt.Cells(foundRow, COL_ART_STOCK).Value = currentQty + qty
         Else
             wsArt.Cells(foundRow, COL_ART_STOCK).Value = currentQty - qty
         End If
-        
-        wsArt.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     End If
+    
+    ' Always re-protect sheet
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    Exit Sub
+    
+ErrorHandler:
+    ' Guarantee sheet re-protection even on error
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    mod_ErrorHandler.HandleError "UpdateArticleStockBalance", Err.Number, Err.Description
 End Sub
 
-' ================================================================================
+' ============================================================================
 ' FUNCTION: GetAnnualDemandFromHistory
-' Aggregates annual demand from MOUVEMENTS sheet for a given SKU.
-' ================================================================================
+' Aggregates annual demand from MOUVEMENTS sheet for a given SKU
+' ============================================================================
 Public Function GetAnnualDemandFromHistory(ByVal sku As String) As Double
     On Error Resume Next
-    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    Dim wsMouv As Worksheet
+    Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
     If wsMouv Is Nothing Then GetAnnualDemandFromHistory = 0: Exit Function
+    
     Dim currentYear As Integer: currentYear = Year(Date)
     
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
     GetAnnualDemandFromHistory = WorksheetFunction.SumIfs( _
-        wsMouv.Columns(COL_MOUV_QTE), _
-        wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
-        wsMouv.Columns(COL_MOUV_TYPE), "OUT", _
-        wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
+        wsMouv.Range("E:E"), _
+        wsMouv.Range("B:B"), sku, _
+        wsMouv.Range("D:D"), "SORTIE", _
+        wsMouv.Range("A:A"), ">=" & DateSerial(currentYear, 1, 1))
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     On Error GoTo 0
 End Function
 
-' ================================================================================
+' ============================================================================
 ' FUNCTION: CalculateCMUP
-' Formula: CMUP = Total IN Value / Total IN Quantity
-' ================================================================================
+' SCF-compliant moving weighted average (arrete 26/07/2008, points 123-6/123-7, IAS 2)
+'
+' Walks MOUVEMENTS chronologically:
+'   ENTREE: qtyOnHand += qty; valueOnHand += qty * unitCostExclTVA
+'   SORTIE: qtyOnHand -= qty; valueOnHand -= qty * currentCMUP (CMUP unchanged)
+'
+' Returns: valueOnHand / qtyOnHand (or 0 if no stock)
+'
+' Key fix: openingQty is derived from current balance minus net movements,
+' NOT read directly from col 3 (which is the live balance).
+' ============================================================================
 Public Function CalculateCMUP(ByVal sku As String) As Double
-    On Error Resume Next
-    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    If wsMouv Is Nothing Or wsArt Is Nothing Then CalculateCMUP = 0: Exit Function
-
-    Dim totalInQty As Double, TotalINValue As Double
-    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
-    totalInQty = WorksheetFunction.SumIfs(wsMouv.Columns(COL_MOUV_QTE), wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, wsMouv.Columns(COL_MOUV_TYPE), "IN")
-    TotalINValue = WorksheetFunction.SumIfs(wsMouv.Columns(COL_MOUV_VALEUR), wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, wsMouv.Columns(COL_MOUV_TYPE), "IN")
-
-    ' CMUP = Total IN Value / Total IN Quantity (standard weighted average cost)
-    If totalInQty > 0 Then
-        CalculateCMUP = TotalINValue / totalInQty
+    On Error GoTo ErrorHandler
+    
+    ' --- Step 1: Get opening stock from ARTICLES sheet ---
+    Dim wsArt As Worksheet
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    If wsArt Is Nothing Then CalculateCMUP = 0: Exit Function
+    
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then CalculateCMUP = 0: Exit Function
+    
+    ' Read current live balance and PU (both excl TVA)
+    Dim currentBalance As Double: currentBalance = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK).Value)
+    Dim rawUnitPrice As Double: rawUnitPrice = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
+    
+    ' Exclude TVA from PU if needed
+    Dim puExclTVA As Double
+    If mod_Config.PU_INCLUDES_TVA And mod_Config.TAX_RATE > 0 Then
+        puExclTVA = rawUnitPrice / (1 + mod_Config.TAX_RATE)
     Else
-        CalculateCMUP = 0
+        puExclTVA = rawUnitPrice
+    End If
+    
+    ' --- Step 2: Get movements for this SKU ---
+    Dim wsMouv As Worksheet
+    Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then
+        CalculateCMUP = IIf(currentBalance > 0, puExclTVA, 0)
+        Exit Function
+    End If
+    
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, mod_Config.COL_MOUV_DATE).End(xlUp).Row
+    Dim totalInQty As Double, totalOutQty As Double
+    Dim i As Long
+    
+    ' First pass: compute net movements to derive initial stock
+    ' initialStock = currentBalance - totalIn + totalOut
+    For i = 2 To lastRow
+        If Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            Dim movType As String: movType = UCase(Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value))
+            Dim movQty As Double: movQty = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
+            If movType = "ENTREE" Then
+                totalInQty = totalInQty + movQty
+            ElseIf movType = "SORTIE" Then
+                totalOutQty = totalOutQty + movQty
+            End If
+        End If
+    Next i
+    
+    ' Derive initial stock (before any movements)
+    Dim initialQty As Double: initialQty = currentBalance - totalInQty + totalOutQty
+    If initialQty < 0 Then initialQty = 0
+    
+    ' Initialize running totals
+    Dim qtyOnHand As Double: qtyOnHand = initialQty
+    Dim valueOnHand As Double: valueOnHand = initialQty * puExclTVA
+    Dim currentCMUP As Double
+    If qtyOnHand > 0 Then currentCMUP = puExclTVA Else currentCMUP = 0
+    
+    ' --- Collect SKU movements into array for date-sort ---
+    Dim mouvDate() As Double, mouvTypeArr() As String, mouvQtyArr() As Double
+    Dim mouvPUArr() As Double, mouvValArr() As Double
+    Dim mouvCount As Long: mouvCount = 0
+    
+    For i = 2 To lastRow
+        If Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            mouvCount = mouvCount + 1
+            ReDim Preserve mouvDate(1 To mouvCount)
+            ReDim Preserve mouvTypeArr(1 To mouvCount)
+            ReDim Preserve mouvQtyArr(1 To mouvCount)
+            ReDim Preserve mouvPUArr(1 To mouvCount)
+            ReDim Preserve mouvValArr(1 To mouvCount)
+            mouvDate(mouvCount) = CDbl(wsMouv.Cells(i, mod_Config.COL_MOUV_DATE).Value)
+            mouvTypeArr(mouvCount) = UCase(Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value))
+            mouvQtyArr(mouvCount) = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
+            mouvPUArr(mouvCount) = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_PU).Value)
+            mouvValArr(mouvCount) = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_VALEUR).Value)
+        End If
+    Next i
+    
+    ' Bubble-sort by date (ascending) for chronological order
+    Dim j As Long, tmpD As Double, tmpT As String, tmpQ As Double, tmpP As Double, tmpV As Double
+    If mouvCount > 1 Then
+        For i = 1 To mouvCount - 1
+            For j = i + 1 To mouvCount
+                If mouvDate(j) < mouvDate(i) Then
+                    tmpD = mouvDate(i): mouvDate(i) = mouvDate(j): mouvDate(j) = tmpD
+                    tmpT = mouvTypeArr(i): mouvTypeArr(i) = mouvTypeArr(j): mouvTypeArr(j) = tmpT
+                    tmpQ = mouvQtyArr(i): mouvQtyArr(i) = mouvQtyArr(j): mouvQtyArr(j) = tmpQ
+                    tmpP = mouvPUArr(i): mouvPUArr(i) = mouvPUArr(j): mouvPUArr(j) = tmpP
+                    tmpV = mouvValArr(i): mouvValArr(i) = mouvValArr(j): mouvValArr(j) = tmpV
+                End If
+            Next j
+        Next i
+    End If
+    
+    ' Second pass: walk movements in DATE order (chronological moving average)
+    Dim mType As String, mQty As Double, movPU As Double, movValue As Double
+    Dim movCostExclTVA As Double
+    
+    For i = 1 To mouvCount
+        mType = mouvTypeArr(i)
+        mQty = mouvQtyArr(i)
+        
+        If mType = "ENTREE" Then
+            movPU = mouvPUArr(i)
+            movValue = mouvValArr(i)
+            
+            ' If PU includes TVA, exclude it
+            If mod_Config.PU_INCLUDES_TVA And mod_Config.TAX_RATE > 0 And movPU > 0 Then
+                movCostExclTVA = movPU / (1 + mod_Config.TAX_RATE)
+            ElseIf movPU > 0 Then
+                movCostExclTVA = movPU
+            ElseIf mQty > 0 Then
+                movCostExclTVA = movValue / mQty
+            Else
+                movCostExclTVA = 0
+            End If
+            
+            qtyOnHand = qtyOnHand + mQty
+            valueOnHand = valueOnHand + (mQty * movCostExclTVA)
+            
+        ElseIf mType = "SORTIE" Then
+            If qtyOnHand > 0 Then
+                ' Subtract at current CMUP (cost doesn't change on sale)
+                valueOnHand = valueOnHand - (mQty * currentCMUP)
+                qtyOnHand = qtyOnHand - mQty
+                If qtyOnHand < 0 Then qtyOnHand = 0
+            End If
+        End If
+        
+        ' Update CMUP after each movement
+        If qtyOnHand > 0 Then
+            currentCMUP = valueOnHand / qtyOnHand
+        Else
+            currentCMUP = 0
+        End If
+    Next i
+    
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    
+    CalculateCMUP = currentCMUP
+    On Error GoTo 0
+    Exit Function
+    
+ErrorHandler:
+    On Error Resume Next
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    CalculateCMUP = 0
+    On Error GoTo 0
+End Function
+
+' ============================================================================
+' FUNCTION: GetUnitPriceExclTVA
+' Returns unit price excluding TVA for costing purposes
+' SCF requires TVA to be excluded from inventory valuation
+' ============================================================================
+Public Function GetUnitPriceExclTVA(ByVal sku As String) As Double
+    On Error Resume Next
+    Dim wsArt As Worksheet
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    If wsArt Is Nothing Then GetUnitPriceExclTVA = 0: Exit Function
+    
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then
+        GetUnitPriceExclTVA = 0
+    Else
+        Dim pu As Double: pu = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
+        ' Use CONFIG flag to determine if PU includes TVA
+        Dim taxRate As Double: taxRate = mod_Config.TAX_RATE
+        If mod_Config.PU_INCLUDES_TVA And taxRate > 0 Then
+            GetUnitPriceExclTVA = pu / (1 + taxRate)
+        Else
+            GetUnitPriceExclTVA = pu
+        End If
     End If
     On Error GoTo 0
 End Function
 
-' ================================================================================
+' ============================================================================
 ' SUB: RefreshAllCMUP
 ' Recalculates CMUP for all articles in ARTICLES sheet
-' ================================================================================
+' Uses corrected SCF-compliant formula with opening stock
+' Error handling: State save/restore, sheet re-protection
+' ============================================================================
 Public Sub RefreshAllCMUP()
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row
+    On Error GoTo ErrorHandler
     
-    Application.ScreenUpdating = False
-    Application.Calculation = xlCalculationManual
+    ' Save application state
+    mod_ErrorHandler.SaveAppState
+    
+    Dim wsArt As Worksheet
+    Set wsArt = mod_ErrorHandler.SafeOpenSheet(mod_Config.SHEET_ARTICLES)
+    If wsArt Is Nothing Then GoTo Cleanup
+    
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
     
     Dim i As Long, cmup As Double
     For i = 2 To lastRow
@@ -323,32 +424,48 @@ Public Sub RefreshAllCMUP()
         End If
     Next i
     
-    Application.Calculation = xlCalculationAutomatic
-    Application.ScreenUpdating = True
+Cleanup:
+    ' Always restore state
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    mod_ErrorHandler.RestoreAppState
+    
     If Application.UserControl Then
-        MsgBox "CMUP (Prix Moyen) mis " & Chr(233) & " jour.", vbInformation, mod_Config.SYS_TITLE
+        MsgBox "CMUP (Prix Moyen Pondere) mis a jour." & vbCrLf & vbCrLf & _
+               "Formule conforme SCF:" & vbCrLf & _
+               "Moyenne mobile chronologique sur les mouvements", _
+               vbInformation, mod_Config.SYS_TITLE
     End If
+    Exit Sub
+    
+ErrorHandler:
+    ' Restore state on error
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    mod_ErrorHandler.RestoreAppState
+    mod_ErrorHandler.HandleError "RefreshAllCMUP", Err.Number, Err.Description
 End Sub
 
-' ================================================================================
+' ============================================================================
 ' SUB: UpdateAllABCClassifications
-' Calculates ABC classification based on annual consumption value.
-' A: Top 80%, B: 15%, C: 5%
-' Added: Session 22 - was referenced by mod_SyncBridge.SyncMetricsFromLedger,
-'       mod_Analysis.RunAnalysis, and mod_TaskOrchestrator task registry
-'       (string label only) but the sub itself was missing.
-' ================================================================================
+' ABC classification: A: Top 80%, B: 15%, C: 5%
+' Error handling: State save/restore, sheet re-protection
+' ============================================================================
 Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row
-    If lastRow < 2 Then Exit Sub
+    On Error GoTo ErrorHandler
+    
+    ' Save application state
+    mod_ErrorHandler.SaveAppState
+    
+    Dim wsArt As Worksheet
+    Set wsArt = mod_ErrorHandler.SafeOpenSheet(mod_Config.SHEET_ARTICLES)
+    If wsArt Is Nothing Then GoTo Cleanup
+    
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    If lastRow < 2 Then GoTo Cleanup
 
     Dim i As Long
     Dim totalValue As Double: totalValue = 0
     Dim articleValues() As Double: ReDim articleValues(2 To lastRow)
     Dim articleCodes() As String: ReDim articleCodes(2 To lastRow)
-
-    wsArt.Unprotect Password:=mod_Config.MASTER_PWD
 
     For i = 2 To lastRow
         Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
@@ -361,10 +478,7 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
         End If
     Next i
 
-    If totalValue = 0 Then
-        wsArt.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
-        Exit Sub
-    End If
+    If totalValue = 0 Then GoTo Cleanup
 
     Dim j As Long, tempVal As Double, tempCode As String
     For i = 2 To lastRow - 1
@@ -381,7 +495,7 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
         cumulativeValue = cumulativeValue + articleValues(i)
         Dim ratio As Double: ratio = cumulativeValue / totalValue
         Dim abcClass As String
-
+        
         If ratio <= 0.8 Then
             abcClass = "A"
         ElseIf ratio <= 0.95 Then
@@ -391,90 +505,72 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
         End If
 
         Dim foundRow As Variant
-        foundRow = Application.Match(articleCodes(i), wsArt.Columns(COL_ART_CODE), 0)
+        foundRow = Application.Match(articleCodes(i), wsArt.Range("A:A"), 0)
         If Not IsError(foundRow) Then
             wsArt.Cells(foundRow, COL_ART_CLASSE_ABC).Value = abcClass
         End If
     Next i
 
-    wsArt.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+Cleanup:
+    ' Always restore state
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    mod_ErrorHandler.RestoreAppState
+    
     If Not silent Then
         MsgBox "Classifications ABC mises a jour.", vbInformation, mod_Config.SYS_TITLE
     End If
+    Exit Sub
+    
+ErrorHandler:
+    ' Restore state on error
+    mod_ErrorHandler.SafeCloseSheet wsArt
+    mod_ErrorHandler.RestoreAppState
+    mod_ErrorHandler.HandleError "UpdateAllABCClassifications", Err.Number, Err.Description
 End Sub
 
-' ================================================================================
-' FUNCTION: GetArticleStock
-' Returns current stock quantity for an article (reads from ARTICLES column C)
-' ================================================================================
-Public Function GetArticleStock(ByVal sku As String) As Double
+' ============================================================================
+' FUNCTION: GetOrderRecommendation
+' Returns recommended order quantity based on EOQ
+' ============================================================================
+Public Function GetOrderRecommendation(ByVal sku As String) As Double
+    Dim annualDemand As Double: annualDemand = GetAnnualDemandFromHistory(sku)
+    Dim pu As Double
     Dim wsArt As Worksheet
-    Dim foundRow As Variant
-    
     On Error Resume Next
     Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
     On Error GoTo 0
     
-    If wsArt Is Nothing Then
-        GetArticleStock = 0
-        Exit Function
-    End If
+    If wsArt Is Nothing Then GetOrderRecommendation = 0: Exit Function
     
-    foundRow = Application.Match(sku, wsArt.Columns(COL_ART_CODE), 0)
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then GetOrderRecommendation = 0: Exit Function
     
-    If IsError(foundRow) Then
-        GetArticleStock = 0
-        Exit Function
-    End If
-    
-    GetArticleStock = mod_Utilities.SafeVal(wsArt.Cells(foundRow, COL_ART_STOCK).Value)
+    pu = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+    GetOrderRecommendation = ComputeEOQ(annualDemand, pu)
 End Function
 
-' ================================================================================
-' FUNCTION: GetNextSequence
-' Returns next sequence number for a given doc prefix (e.g. "BS-", "BR-", "BC-")
-' Scans MOUVEMENTS sheet column COL_MOUV_REF_DOC for existing refs with the
-' prefix, finds the max suffix number, and returns max+1.
-' Added: Session 22 - was called from mod_StockEntry_Logic.GenerateAutoRef
-'       (mod_StockEngine.GetNextSequence) but the function itself was missing.
-'       Reference impl lifted from external/lsm-vba-core (where it lived as
-'       Private in mod_StockEntry_Logic); moved here to keep stock math co-located.
-' ================================================================================
-Public Function GetNextSequence(ByVal prefix As String) As Long
-    Dim wsMouv   As Worksheet
-    Dim lastRow  As Long
-    Dim i        As Long
-    Dim maxSeq   As Long
-    Dim refStr   As String
-
-    maxSeq = 0
-
-    On Error Resume Next
-    Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
-    On Error GoTo 0
-
-    If wsMouv Is Nothing Then
-        GetNextSequence = 1
-        Exit Function
+' ============================================================================
+' FUNCTION: GetStockStatus
+' Returns stock status: OK, ALERT, CRITICAL, OUT_OF_STOCK
+' ============================================================================
+Public Function GetStockStatus(ByVal sku As String) As String
+    Dim currentStock As Double: currentStock = GetArticleStock(sku)
+    Dim annualDemand As Double: annualDemand = GetAnnualDemandFromHistory(sku)
+    
+    If annualDemand <= 0 Then GetStockStatus = "OK": Exit Function
+    
+    Dim avgDaily As Double: avgDaily = annualDemand / mod_Config.WORKING_DAYS_PER_YEAR
+    Dim rop As Double: rop = ComputeROP(avgDaily, sku)
+    Dim ss As Double: ss = GetSafetyStock(sku)
+    
+    If currentStock <= 0 Then
+        GetStockStatus = "OUT_OF_STOCK"
+    ElseIf currentStock <= ss Then
+        GetStockStatus = "CRITICAL"
+    ElseIf currentStock <= rop Then
+        GetStockStatus = "ALERT"
+    Else
+        GetStockStatus = "OK"
     End If
-
-    lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_REF_DOC).End(xlUp).Row
-
-    For i = 3 To lastRow
-        refStr = CStr(wsMouv.Cells(i, COL_MOUV_REF_DOC).Value)
-        If Left(refStr, Len(prefix)) = prefix And InStr(refStr, "-") > 0 Then
-            Dim parts() As String
-            parts = Split(refStr, "-")
-            If UBound(parts) >= 2 Then
-                Dim seqNum As Long
-                On Error Resume Next
-                seqNum = CLng(parts(UBound(parts)))
-                If Err.Number = 0 And seqNum > maxSeq Then maxSeq = seqNum
-                On Error GoTo 0
-            End If
-        End If
-    Next i
-
-    GetNextSequence = maxSeq + 1
 End Function
-

@@ -1,90 +1,74 @@
 Attribute VB_Name = "mod_Dashboard"
 ' ============================================================================
-' Academix v13.2 - DSS Logistique El Bayadh
+' Academix v14.0 - DSS Quincaillerie El Bayadh
 ' Copyright (c) 2025-2026 Mahi Kamel Abdelghani
-' Direction de l'Education - Wilaya d'El Bayadh
-' Protected under Algerian Copyright Law (Ordinance 03-05, July 19, 2003)
-' All rights reserved. Unauthorized reproduction or distribution prohibited.
+' Hardware Store Dashboard - 40 articles, real-time KPIs
 ' ============================================================================
 
 Option Explicit
 
-'=======================================================================================
-' MODULE: mod_Dashboard.bas
-' PROJECT: ERP Academie v13.2
-' PURPOSE: Dynamic Dashboard Controller
-'
-' This module transforms the static DASHBOARD sheet into a live monitoring console.
-' It reads the computed metrics from the ARTICLES and MOUVEMENTS sheets (via mod_SyncBridge)
-' and visualizes the critical stock state, ABC-XYZ distribution, and global KPIs.
-'=======================================================================================
-
 '--------------------------------------------------------------------------------------
-' MAIN ENTRY POINT: RefreshDashboard
-' Updates all KPIs and tables on the DASHBOARD sheet.
+' MAIN: RefreshDashboard
 '--------------------------------------------------------------------------------------
 Public Sub RefreshDashboard()
-    Dim ws As Worksheet
-    Dim procStep As String
-    
     On Error GoTo ErrorHandler
     
-    procStep = "GetOrCreateDashboardSheet"
+    Dim ws As Worksheet
     Set ws = GetOrCreateDashboardSheet()
     
-    procStep = "UpdateKPIs"
     Call UpdateKPIs(ws)
-    
-    procStep = "UpdateCriticalTable"
     Call UpdateCriticalTable(ws)
-    
-    procStep = "UpdateABCXYZSummary"
     Call UpdateABCXYZSummary(ws)
-    
-    procStep = "UpdateProjection"
     Call UpdateProjection(ws)
     
-    ' Final Touch: Update timestamp
+    ws.Unprotect Password:=mod_Config.MASTER_PWD
     ws.Range("B1").Value = "Derniere actualisation : " & Format(Now, "DD/MM/YYYY HH:MM:SS")
     ws.Range("B1").Font.Size = 8
     ws.Range("B1").Font.Italic = True
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     
-    MsgBox "Tableau de bord actualise avec succes !", vbInformation, "Dashboard Sync"
+    MsgBox "Tableau de bord actualise avec succes !", vbInformation, "DSS Quincaillerie"
     Exit Sub
     
 ErrorHandler:
-    MsgBox "Erreur lors de l'actualisation du tableau de bord." & vbCrLf & vbCrLf & _
-           "Etape: " & procStep & vbCrLf & _
-           "Erreur: " & Err.Description, vbCritical, "Dashboard Sync - Erreur"
+    On Error Resume Next
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    MsgBox "Erreur actualisation: " & Err.Description, vbCritical, mod_Config.SYS_TITLE
+    On Error GoTo 0
 End Sub
 
 '--------------------------------------------------------------------------------------
-' HELPER: Update Global KPIs
+' KPIs
 '--------------------------------------------------------------------------------------
 Private Sub UpdateKPIs(ws As Worksheet)
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    ws.Unprotect Password:=mod_Config.MASTER_PWD
+    
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsArt Is Nothing Then Exit Sub
+    
     Dim totalSKUs As Long
     Dim countRupture As Long
     Dim countAlert As Long
     Dim totalValue As Double
     
-    totalSKUs = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row - 1
+    totalSKUs = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row - 1
     If totalSKUs < 0 Then totalSKUs = 0
     
-    ' Iterate through ARTICLES to find status and total value
     Dim i As Long
     On Error Resume Next
     For i = 2 To totalSKUs + 1
-        Dim stock As Long: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value) ' Col C: Stock
-        Dim pu As Double: pu = Val(wsArt.Cells(i, COL_ART_PU).Value)     ' Col H: PU
+        Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
+        Dim pu As Double: pu = Val(wsArt.Cells(i, COL_ART_PU).Value)
         
         totalValue = totalValue + (stock * pu)
         
-        ' Simple status check based on ROP/SS from mod_StockEngine
         Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
         Dim ss As Double: ss = mod_StockEngine.GetSafetyStock(sku)
-        Dim AnnualDemand As Double: AnnualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
-        Dim rop As Double: rop = mod_StockEngine.ComputeROP(AnnualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
+        Dim annualDemand As Double: annualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
+        Dim rop As Double: rop = mod_StockEngine.ComputeROP(annualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
         
         If stock <= 0 Then
             countRupture = countRupture + 1
@@ -94,7 +78,6 @@ Private Sub UpdateKPIs(ws As Worksheet)
     Next i
     On Error GoTo 0
     
-    ' Layout KPIs
     ws.Range("B2").Value = "Total Articles"
     ws.Range("C2").Value = totalSKUs
     
@@ -108,13 +91,13 @@ Private Sub UpdateKPIs(ws As Worksheet)
     
     ws.Range("B5").Value = "Valeur Total Stock"
     ws.Range("C5").Value = totalValue
-    ws.Range("C5").NumberFormat = "#,##0.00 ""DZD"""
+    On Error Resume Next
+    ws.Range("C5").NumberFormat = "#,##0.00"
+    On Error GoTo 0
     
     ws.Range("B6").Value = "Rotation Moyenne (ITR)"
-    ' Simplified ITR for Dashboard
     ws.Range("C6").Value = "Calcul Local"
     
-    ' Formatting
     With ws.Range("B2:B6")
         .Font.Bold = True
         .HorizontalAlignment = xlRight
@@ -124,33 +107,38 @@ Private Sub UpdateKPIs(ws As Worksheet)
         .Font.Bold = True
         .HorizontalAlignment = xlLeft
     End With
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 End Sub
 
 '--------------------------------------------------------------------------------------
-' HELPER: Update Critical Items Table (Top 5 closest to rupture)
+' CRITICAL TABLE
 '--------------------------------------------------------------------------------------
 Private Sub UpdateCriticalTable(ws As Worksheet)
-    ' Header
+    ws.Unprotect Password:=mod_Config.MASTER_PWD
     ws.Range("D2:G2").Value = Array("SKU", "Designation", "Stock", "Etat")
     ws.Range("D2:G2").Interior.Color = RGB(0, 70, 127)
     ws.Range("D2:G2").Font.Color = RGB(255, 255, 255)
     ws.Range("D2:G2").Font.Bold = True
     ws.Range("D2:G2").HorizontalAlignment = xlCenter
     
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsArt Is Nothing Then Exit Sub
     
-    ' Store critical items in a temporary array
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    
     Dim criticalList(1 To 1000, 1 To 4) As Variant
     Dim countCrit As Integer: countCrit = 0
     
     Dim i As Long
     For i = 2 To lastRow
         Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
-        Dim stock As Long: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
+        Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
         
-        Dim AnnualDemand As Double: AnnualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
-        Dim rop As Double: rop = mod_StockEngine.ComputeROP(AnnualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
+        Dim annualDemand As Double: annualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
+        Dim rop As Double: rop = mod_StockEngine.ComputeROP(annualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
         
         If stock <= rop Then
             countCrit = countCrit + 1
@@ -163,10 +151,9 @@ Private Sub UpdateCriticalTable(ws As Worksheet)
         End If
     Next i
     
-    ' Write Top 5 to sheet
     Dim rowNum As Integer: rowNum = 3
     For i = 1 To countCrit
-        If i > 5 Then Exit For
+        If i > 10 Then Exit For  ' Show top 10 instead of 5
         ws.Cells(rowNum, 4).Value = criticalList(i, 1)
         ws.Cells(rowNum, 5).Value = criticalList(i, 2)
         ws.Cells(rowNum, 6).Value = criticalList(i, 3)
@@ -178,22 +165,31 @@ Private Sub UpdateCriticalTable(ws As Worksheet)
         rowNum = rowNum + 1
     Next i
     
-    ws.Range("D3:G" & rowNum - 1).Borders.LineStyle = xlContinuous
+    If rowNum > 3 Then
+        ws.Range("D3:G" & rowNum - 1).Borders.LineStyle = xlContinuous
+    End If
     ws.Columns("D:G").AutoFit
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 End Sub
 
 '--------------------------------------------------------------------------------------
-' HELPER: Update ABC-XYZ Summary
+' ABC SUMMARY
 '--------------------------------------------------------------------------------------
 Private Sub UpdateABCXYZSummary(ws As Worksheet)
+    ws.Unprotect Password:=mod_Config.MASTER_PWD
     ws.Range("I2").Value = "Classe"
     ws.Range("J2").Value = "Nombre d'articles"
     ws.Range("I2:J2").Interior.Color = RGB(0, 70, 127)
     ws.Range("I2:J2").Font.Color = RGB(255, 255, 255)
     ws.Range("I2:J2").Font.Bold = True
     
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.count, COL_ART_CODE).End(xlUp).Row
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsArt Is Nothing Then Exit Sub
+    
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
     
     Dim classes As Variant: classes = Array("A", "B", "C")
     Dim rowNum As Integer: rowNum = 3
@@ -217,26 +213,31 @@ Private Sub UpdateABCXYZSummary(ws As Worksheet)
     
     ws.Range("I3:J" & rowNum - 1).Borders.LineStyle = xlContinuous
     ws.Columns("I:J").AutoFit
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 End Sub
 
 '--------------------------------------------------------------------------------------
-' HELPER: Update Stockout Projection Table
-' Calculates consumption velocity, days to stockout, and projected date.
-' Outputs to columns L-O on the DASHBOARD sheet.
+' PROJECTION
 '--------------------------------------------------------------------------------------
 Private Sub UpdateProjection(ws As Worksheet)
-    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
-    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    ws.Unprotect Password:=mod_Config.MASTER_PWD
+    Dim wsMouv As Worksheet
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsMouv Is Nothing Or wsArt Is Nothing Then Exit Sub
+    
     Dim lastMouv As Long: lastMouv = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
     Dim lastArt As Long: lastArt = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
-    Dim i As Long, j As Long
+    Dim i As Long
     
-    ' Step 1: Aggregate total OUT qty per article
     Dim dict As Object: Set dict = CreateObject("Scripting.Dictionary")
     For i = 2 To lastMouv
-        If Trim(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "OUT" Then
+        If Trim(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
             Dim artCode As String: artCode = Trim(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value)
-            Dim qty As Double: qty = mod_Utilities.SafeVal(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+            Dim qty As Double: qty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
             If dict.Exists(artCode) Then
                 dict(artCode) = CDbl(dict(artCode)) + qty
             Else
@@ -245,7 +246,6 @@ Private Sub UpdateProjection(ws As Worksheet)
         End If
     Next i
     
-    ' Step 2: Write projection table
     Dim startCol As Long: startCol = 12
     ws.Cells(1, startCol).Value = "Projection des Ruptures"
     ws.Range(ws.Cells(1, startCol), ws.Cells(1, startCol + 3)).Merge
@@ -266,7 +266,7 @@ Private Sub UpdateProjection(ws As Worksheet)
     For i = 2 To lastArt
         artCode = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
         If artCode <> "" Then
-            Dim stock As Double: stock = mod_Utilities.SafeVal(wsArt.Cells(i, COL_ART_STOCK).Value)
+            Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
             Dim totalOut As Double
             If dict.Exists(artCode) Then totalOut = CDbl(dict(artCode)) Else totalOut = 0
             
@@ -311,10 +311,11 @@ Private Sub UpdateProjection(ws As Worksheet)
         ws.Range(ws.Cells(3, startCol), ws.Cells(rowNum - 1, startCol + 3)).Borders.LineStyle = xlContinuous
     End If
     ws.Columns("L:O").AutoFit
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 End Sub
 
 '--------------------------------------------------------------------------------------
-' HELPER: Get or Create Dashboard Sheet
+' GET OR CREATE
 '--------------------------------------------------------------------------------------
 Private Function GetOrCreateDashboardSheet() As Worksheet
     Dim ws As Worksheet
@@ -324,16 +325,13 @@ Private Function GetOrCreateDashboardSheet() As Worksheet
     
     If ws Is Nothing Then
         Set ws = ThisWorkbook.Sheets.Add(Before:=ThisWorkbook.Sheets(1))
-        ws.name = "DASHBOARD"
+        ws.Name = "DASHBOARD"
     End If
     
-    ' Unprotect before clearing (sheet may be protected by FinalizeBuildProtection)
     On Error Resume Next
     ws.Unprotect Password:=mod_Config.MASTER_PWD
     On Error GoTo 0
     
-    ' Basic Clean - UnMerge first to avoid merge persistence across calls
-    ws.Cells.UnMerge
     ws.Cells.Clear
     ws.Cells.Interior.Color = RGB(245, 245, 245)
     
