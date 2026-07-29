@@ -1,0 +1,73 @@
+name: VBA module check
+
+# Fails the build when two .bas files declare the same Attribute VB_Name.
+#
+# Why: Excel does not overwrite on import. Importing two files that both declare
+# VB_Name = "mod_StockEngine" produces mod_StockEngine and mod_StockEngine1, and
+# which one actually runs depends on import order. This bit the project twice:
+# once on mod_FormHelpers (2026-07-26) and again across seven modules
+# (2026-07-29), where the stale duplicate carried a pre-fix, SCF non-compliant
+# CMUP calculation.
+#
+# This file is intentionally self-contained - no checkout of sibling repos, no
+# pip install. Drop it into any Academix repo unchanged.
+
+on:
+  push:
+    paths: ["**/*.bas", "**/*.frm", ".github/workflows/vba-module-check.yml"]
+  pull_request:
+    paths: ["**/*.bas", "**/*.frm"]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for duplicate VB_Name declarations
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re, sys
+          from pathlib import Path
+          from collections import defaultdict
+
+          VB_NAME = re.compile(r'Attribute\s+VB_Name\s*=\s*"([^"]+)"')
+
+          declared = defaultdict(list)
+          missing = []
+          total = 0
+
+          for path in sorted(Path(".").rglob("*.bas")) + sorted(Path(".").rglob("*.frm")):
+              total += 1
+              text = path.read_bytes().decode("latin-1")
+              m = VB_NAME.search(text)
+              if m:
+                  declared[m.group(1)].append(path)
+              else:
+                  missing.append(path)
+
+          collisions = {k: v for k, v in declared.items() if len(v) > 1}
+
+          print(f"scanned {total} module file(s); {len(declared)} distinct VB_Name")
+
+          if missing:
+              print(f"\n::warning::{len(missing)} file(s) declare no VB_Name "
+                    f"(Excel will name these from the filename):")
+              for p in missing:
+                  print(f"  {p}")
+
+          if collisions:
+              print(f"\n{len(collisions)} duplicate VB_Name declaration(s):\n")
+              for name, paths in sorted(collisions.items()):
+                  print(f"::error::duplicate VB_Name '{name}'")
+                  for p in paths:
+                      print(f"    {p}  ({p.stat().st_size} bytes)")
+              print("\nExcel creates mod_Xxx1 rather than overwriting, so the module that")
+              print("actually executes depends on import order. Delete the stale file and")
+              print("keep exactly one authoritative module per VB_Name.")
+              sys.exit(1)
+
+          print("\nOK: every module declares a unique VB_Name.")
+          PY
