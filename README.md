@@ -8,10 +8,10 @@ Hardware store — fer/acier, ciment, plomberie, electricite, outillage, peintur
 
 ## Modules
 
-### Shared (7) — canonical copies
-`mod_Config` (13.2 KB), `mod_Dashboard` (12.7 KB), `mod_DemoData` (38.3 KB), `mod_StockEngine` (22.6 KB), `mod_SupplierRegistry` (13.6 KB), `mod_Barcode` (10.4 KB), `mod_Reports` (13.9 KB)
+### Shared (6) — canonical copies
+`mod_Dashboard` (12.7 KB), `mod_DemoData` (38.3 KB), `mod_StockEngine` (22.6 KB), `mod_SupplierRegistry` (13.6 KB), `mod_Barcode` (10.4 KB), `mod_Reports` (13.9 KB)
 
-### Hardware-Specific (19)
+### Hardware-Specific (21)
 | Module | Purpose |
 |--------|---------|
 | `MAIN_MACROS_CLEAN.bas` | Entry point — macro runner |
@@ -33,6 +33,8 @@ Hardware store — fer/acier, ciment, plomberie, electricite, outillage, peintur
 | `mod_MasterSetup_v14.bas` | Master setup |
 | `mod_PurchaseOrder_v14.bas` | Purchase orders |
 | `mod_StockEntryHelpers.bas` | Stock entry helpers |
+| `mod_Branding.bas` | Version info, about dialog, branding colors |
+| `mod_Splash.bas` | Splash screen, loading indicators, branded messages |
 
 ## Data
 
