@@ -173,8 +173,9 @@ Public Sub MasterSetup()
     ' === SUMMARY ===
     Dim elapsed As Double: elapsed = Timer - startTime
     msg = msg & vbCrLf & String(40, "=") & vbCrLf
+    msg = msg & mod_Branding.GetVersionString() & vbCrLf
     msg = msg & "Setup complete in " & Format(elapsed, "0.0") & " seconds" & vbCrLf
-    msg = msg & "All 8 UserForms built" & vbCrLf
+    msg = msg & "All 9 UserForms built" & vbCrLf
     msg = msg & "ACCUEIL buttons ready" & vbCrLf
     msg = msg & "Dashboard KPIs refreshed" & vbCrLf
     
@@ -183,7 +184,7 @@ Public Sub MasterSetup()
         msg = msg & "Configuration initiale requise - l'assistant va s'ouvrir." & vbCrLf
     End If
 
-    MsgBox msg, vbInformation, mod_Config.SYS_TITLE
+    MsgBox msg, vbInformation, mod_Branding.GetBrandedCaption("Setup")
 
     ' Deliberately after the summary and after step 1: the wizard is a form, so
     ' it can only be shown once the forms have been built. Silent no-op when
@@ -285,7 +286,7 @@ Public Sub SystemStatus()
                      "mod_BuildSupplierEditor", "mod_BuildDashboard", "mod_BuildSearch", _
                      "mod_BuildReception", "mod_BuildReports", "mod_BuildConfig", _
                      "mod_MasterSetup", "mod_StockEntryHelpers", "mod_PurchaseOrder", _
-                     "mod_FirstRun", "mod_BuildFirstRun")
+                     "mod_FirstRun", "mod_BuildFirstRun", "mod_Branding", "mod_Splash")
     For i = LBound(modNames) To UBound(modNames)
         Dim mComp As Object
         Set mComp = Nothing
@@ -310,11 +311,11 @@ Public Sub SystemStatus()
     msg = msg & "  Etablissement : " & mod_Config.BUSINESS_NAME & vbCrLf
     msg = msg & "  Fenetre d'observation : " & mod_Config.ObservationDaysEffective() & " jour(s)" & vbCrLf
 
-    MsgBox msg, vbInformation, mod_Config.SYS_TITLE
+    MsgBox msg, vbInformation, mod_Branding.GetBrandedCaption("System Status")
     Exit Sub
     
 ErrorHandler:
-    MsgBox "Error checking status: " & Err.Description, vbCritical, mod_Config.SYS_TITLE
+    MsgBox "Error checking status: " & Err.Description, vbCritical, mod_Branding.GetBrandedCaption("Error")
 End Sub
 
 ' ============================================================================
@@ -329,6 +330,9 @@ End Sub
 Public Sub Auto_Open()
     On Error GoTo ErrorHandler
     
+    ' Show splash screen
+    mod_Splash.ShowSplash
+    
     ' Before the KPI refresh: on a first open there is nothing worth reporting
     ' until the store has said who it is.
     mod_FirstRun.FirstRunCheck
@@ -341,10 +345,14 @@ Public Sub Auto_Open()
         ws.Activate
     End If
     
+    ' Hide splash
+    mod_Splash.HideSplash
+    
     Exit Sub
     
 ErrorHandler:
     On Error Resume Next
+    mod_Splash.HideSplash
     ' Silent fail on auto-open is acceptable
     On Error GoTo 0
 End Sub
