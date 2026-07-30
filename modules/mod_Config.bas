@@ -112,10 +112,6 @@ Public Function GetWorkingDaysPerYear() As Integer
     GetWorkingDaysPerYear = WORKING_DAYS_PER_YEAR
 End Function
 
-Public Function GetObservationDays() As Integer
-    GetObservationDays = OBSERVATION_DAYS
-End Function
-
 Public Function GetOrderCost() As Double
     GetOrderCost = ORDER_COST
 End Function
@@ -208,15 +204,79 @@ Public Property Get BUSINESS_RC() As String
     BUSINESS_RC = ReadConfigString("BUSINESS_RC", "00/00-0000000A00")
 End Property
 
-Public Property Get SEASON() As String
-    SEASON = ReadConfigString("SEASON", "Printemps")
+' ----------------------------------------------------------------------------
+' FIRST RUN STATE
+' ----------------------------------------------------------------------------
+' TRUE until the setup wizard has been completed once. Defaults to TRUE so that
+' a workbook whose CONFIG sheet has no FIRST_RUN row - every build shipped
+' before this flow existed - still presents the wizard on the next open.
+Public Property Get IS_FIRST_RUN() As Boolean
+    IS_FIRST_RUN = ReadConfigBool("FIRST_RUN", True)
 End Property
+
+Public Sub MarkFirstRunComplete()
+    WriteConfig "FIRST_RUN", "FALSE"
+End Sub
+
+Public Sub MarkFirstRunPending()
+    WriteConfig "FIRST_RUN", "TRUE"
+End Sub
+
+' ----------------------------------------------------------------------------
+' EFFECTIVE OBSERVATION WINDOW
+' ----------------------------------------------------------------------------
+' OBSERVATION_DAYS is a thesis-era constant: the demo generator produces
+' exactly 90 days of movements, so dividing total outflows by 90 was correct
+' by construction. For a real store it is wrong from day one - a shop three
+' weeks into using the system would have its daily consumption understated
+' roughly fourfold, and the stockout projection on the DASHBOARD would report
+' about four times more runway than it actually has.
+'
+' This derives the window from the data instead: the span actually covered by
+' MOUVEMENTS. Falls back to the configured value when there is nothing to
+' measure, so demo workbooks and empty workbooks both behave as before.
+Public Function ObservationDaysEffective() As Long
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(SHEET_MOUVEMENTS)
+    On Error GoTo 0
+    If ws Is Nothing Then ObservationDaysEffective = OBSERVATION_DAYS: Exit Function
+
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    If lastRow < 2 Then ObservationDaysEffective = OBSERVATION_DAYS: Exit Function
+
+    Dim minD As Double, maxD As Double, v As Variant, i As Long, seen As Boolean
+    For i = 2 To lastRow
+        v = ws.Cells(i, COL_MOUV_DATE).Value
+        If IsDate(v) Then
+            If Not seen Then
+                minD = CDbl(CDate(v)): maxD = minD: seen = True
+            Else
+                If CDbl(CDate(v)) < minD Then minD = CDbl(CDate(v))
+                If CDbl(CDate(v)) > maxD Then maxD = CDbl(CDate(v))
+            End If
+        End If
+    Next i
+
+    If Not seen Then ObservationDaysEffective = OBSERVATION_DAYS: Exit Function
+
+    ' Inclusive span: a single day of movements is one day of observation.
+    Dim span As Long: span = CLng(maxD - minD) + 1
+    If span < 1 Then span = 1
+    ObservationDaysEffective = span
+End Function
 
 ' ============================================================================
 ' CONFIG SHEET READERS - Read from CONFIG sheet with fallback
 ' ============================================================================
+' Public rather than Private: mod_FirstRun reads arbitrary keys to prefill the
+' setup wizard and to test FIRST_RUN, and a caller outside this module cannot
+' reach a Private member. Every one of these resolves its key with
+' Application.Match on column A, so none of them depends on row position.
+' ============================================================================
 
-Private Function ReadConfigInt(ByVal key As String, ByVal defaultVal As Integer) As Integer
+Public Function ReadConfigInt(ByVal key As String, ByVal defaultVal As Integer) As Integer
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
@@ -233,7 +293,7 @@ Private Function ReadConfigInt(ByVal key As String, ByVal defaultVal As Integer)
     End If
 End Function
 
-Private Function ReadConfigDouble(ByVal key As String, ByVal defaultVal As Double) As Double
+Public Function ReadConfigDouble(ByVal key As String, ByVal defaultVal As Double) As Double
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
@@ -250,7 +310,7 @@ Private Function ReadConfigDouble(ByVal key As String, ByVal defaultVal As Doubl
     End If
 End Function
 
-Private Function ReadConfigString(ByVal key As String, ByVal defaultVal As String) As String
+Public Function ReadConfigString(ByVal key As String, ByVal defaultVal As String) As String
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
@@ -267,7 +327,7 @@ Private Function ReadConfigString(ByVal key As String, ByVal defaultVal As Strin
     End If
 End Function
 
-Private Function ReadConfigBool(ByVal key As String, ByVal defaultVal As Boolean) As Boolean
+Public Function ReadConfigBool(ByVal key As String, ByVal defaultVal As Boolean) As Boolean
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
@@ -318,7 +378,22 @@ Public Sub WriteConfig(ByVal key As String, ByVal value As Variant)
 End Sub
 
 ' ============================================================================
-' SEED DEFAULT CONFIG - Initialize CONFIG sheet with default values
+' SEED DEFAULT CONFIG - Fill in any missing parameter, preserve every existing
+' one
+' ============================================================================
+' This used to delete rows 2:last and rewrite all sixteen keys, which meant
+' calling it after setup silently destroyed the business identity the owner had
+' just typed in. That made it a routine nobody could safely call, and in fact
+' nothing did - it was dead code.
+'
+' It is now an upsert that only fills gaps: an existing value is never
+' overwritten and no row is ever deleted, so it is safe to call on every open
+' and it is what brings a pre-existing workbook up to date when new parameters
+' are added. For a deliberate factory reset, use ResetConfigToDefaults.
+'
+' OBSERVATION_DAYS and SEASON are deliberately absent. Both were thesis
+' parameters: SEASON was never read anywhere, and OBSERVATION_DAYS is now
+' derived from the movement history by ObservationDaysEffective.
 ' ============================================================================
 
 Public Sub SeedDefaultConfig()
@@ -327,30 +402,90 @@ Public Sub SeedDefaultConfig()
     Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
     On Error GoTo 0
     If ws Is Nothing Then Exit Sub
-    
+
+    EnsureConfigHeader ws
+
+    ' Business identity is seeded blank on purpose. Shipping a plausible but
+    ' fictitious NIF/NIS/RC is how the thesis placeholders ended up on
+    ' documents; an empty row makes the parameter discoverable in the CONFIG
+    ' sheet while leaving it obvious that it still needs filling in.
+    SeedIfMissing "FIRST_RUN", "TRUE"
+    SeedIfMissing "WORKING_DAYS", 300
+    SeedIfMissing "ORDER_COST", 300
+    SeedIfMissing "HOLDING_RATE", 0.2
+    SeedIfMissing "LEAD_TIME", 2
+    SeedIfMissing "TAX_RATE", 0.19
+    SeedIfMissing "CURRENCY", "DZD"
+    SeedIfMissing "PU_INCLUDES_TVA", "TRUE"
+    SeedIfMissing "INCLUDE_FREIGHT_IN_CMUP", "FALSE"
+    SeedIfMissing "BUSINESS_NAME", ""
+    SeedIfMissing "BUSINESS_ADDRESS", ""
+    SeedIfMissing "BUSINESS_PHONE", ""
+    SeedIfMissing "BUSINESS_NIF", ""
+    SeedIfMissing "BUSINESS_NIS", ""
+    SeedIfMissing "BUSINESS_RC", ""
+
+    Debug.Print "[Config] Missing defaults seeded; existing values preserved"
+End Sub
+
+' Writes the key only when it has no row yet. WriteConfig handles the
+' unprotect/reprotect and the keyed upsert.
+Private Sub SeedIfMissing(ByVal key As String, ByVal defaultVal As Variant)
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
+    On Error GoTo 0
+    If ws Is Nothing Then Exit Sub
+
+    Dim foundRow As Variant
+    foundRow = Application.Match(key, ws.Range("A:A"), 0)
+    If IsError(foundRow) Then WriteConfig key, defaultVal
+End Sub
+
+Private Sub EnsureConfigHeader(ByVal ws As Worksheet)
+    If Trim(CStr(ws.Cells(1, 1).Value)) <> "" Then Exit Sub
+
     ws.Unprotect Password:=MASTER_PWD
-    
+    ws.Cells(1, 1).Value = "Parameter"
+    ws.Cells(1, 2).Value = "Value"
+    ws.Cells(1, 3).Value = "Description"
+    ws.Range("A1:C1").Font.Bold = True
+    ws.Range("A1:C1").Interior.Color = RGB(0, 70, 127)
+    ws.Range("A1:C1").Font.Color = RGB(255, 255, 255)
+    ws.Columns("A:C").AutoFit
+    ws.Protect Password:=MASTER_PWD, UserInterfaceOnly:=True
+End Sub
+
+' ============================================================================
+' RESET CONFIG TO DEFAULTS - Destructive, explicit, and re-arms the wizard
+' ============================================================================
+' The old wipe-and-reseed behaviour, kept available but named for what it does
+' so it cannot be reached for by accident. Clears every parameter, reseeds the
+' defaults, and sets FIRST_RUN back to TRUE so the wizard runs again.
+' ============================================================================
+
+Public Sub ResetConfigToDefaults(Optional ByVal confirm As Boolean = True)
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(SHEET_CONFIG)
+    On Error GoTo 0
+    If ws Is Nothing Then Exit Sub
+
+    If confirm Then
+        Dim m As String
+        m = "Reinitialiser toute la configuration ?" & vbCrLf & vbCrLf & _
+            "Le nom commercial, l'adresse, le NIF, le NIS et le RC seront effaces." & vbCrLf & _
+            "L'assistant de configuration sera relance a la prochaine ouverture." & vbCrLf & vbCrLf & _
+            "Les articles et les mouvements ne sont pas touches."
+        If MsgBox(m, vbExclamation + vbYesNo + vbDefaultButton2, SYS_TITLE) = vbNo Then Exit Sub
+    End If
+
+    ws.Unprotect Password:=MASTER_PWD
     Dim lr As Long: lr = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     If lr > 1 Then ws.Rows("2:" & lr).Delete
-    
-    Dim r As Long: r = 2
-    ws.Cells(r, 1).Value = "WORKING_DAYS": ws.Cells(r, 2).Value = 300: r = r + 1
-    ws.Cells(r, 1).Value = "OBSERVATION_DAYS": ws.Cells(r, 2).Value = 90: r = r + 1
-    ws.Cells(r, 1).Value = "ORDER_COST": ws.Cells(r, 2).Value = 300: r = r + 1
-    ws.Cells(r, 1).Value = "HOLDING_RATE": ws.Cells(r, 2).Value = 0.2: r = r + 1
-    ws.Cells(r, 1).Value = "LEAD_TIME": ws.Cells(r, 2).Value = 2: r = r + 1
-    ws.Cells(r, 1).Value = "TAX_RATE": ws.Cells(r, 2).Value = 0.19: r = r + 1
-    ws.Cells(r, 1).Value = "CURRENCY": ws.Cells(r, 2).Value = "DZD": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_NAME": ws.Cells(r, 2).Value = "Quincaillerie": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_ADDRESS": ws.Cells(r, 2).Value = "Algerie": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_PHONE": ws.Cells(r, 2).Value = "049 00 00 00": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_NIF": ws.Cells(r, 2).Value = "000100000000000": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_NIS": ws.Cells(r, 2).Value = "00100000000000": r = r + 1
-    ws.Cells(r, 1).Value = "BUSINESS_RC": ws.Cells(r, 2).Value = "00/00-0000000A00": r = r + 1
-    ws.Cells(r, 1).Value = "SEASON": ws.Cells(r, 2).Value = "Printemps": r = r + 1
-    ws.Cells(r, 1).Value = "PU_INCLUDES_TVA": ws.Cells(r, 2).Value = "TRUE": r = r + 1
-    ws.Cells(r, 1).Value = "INCLUDE_FREIGHT_IN_CMUP": ws.Cells(r, 2).Value = "FALSE": r = r + 1
-    
     ws.Protect Password:=MASTER_PWD, UserInterfaceOnly:=True
-    Debug.Print "[Config] Default configuration seeded"
+
+    SeedDefaultConfig
+    MarkFirstRunPending
+    Debug.Print "[Config] Configuration reset to defaults; FIRST_RUN re-armed"
 End Sub

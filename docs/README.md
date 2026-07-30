@@ -27,20 +27,33 @@
 
 ## Post-Import Steps
 
-1. Open CONFIG sheet and verify parameters:
+1. Run `MasterSetup` (`Alt+F8`). It builds the nine UserForms, wires the ACCUEIL
+   buttons, and then opens the setup wizard if the system has not been
+   configured yet.
+
+2. In the wizard, enter the business identity and confirm the operating
+   parameters, then choose:
+   - **Demarrer a vide** - empty ledger. What a real store wants.
+   - **Charger donnees demo** - 40 articles, 9 suppliers, 90 days of movements,
+     for training or a demonstration. The identity you entered is preserved.
+
+3. Open the CONFIG sheet and verify:
+   - `FIRST_RUN` = FALSE (set by the wizard)
    - `WORKING_DAYS` = 300
    - `ORDER_COST` = 300
    - `HOLDING_RATE` = 0.2
    - `LEAD_TIME` = 2
    - `TAX_RATE` = 0.19
-   - `BUSINESS_NAME` = Quincaillerie El Bayadh
+   - `BUSINESS_NAME` = the name you entered
 
-2. Run `GenerateDemoData` macro:
-   - Press `Alt+F8`
-   - Select `GenerateDemoData`
-   - Click Run
+4. Run `RefreshDashboard` to verify.
 
-3. Run `RefreshDashboard` macro to verify
+See [FIRST_RUN.md](FIRST_RUN.md) for the wizard's entry points, how to reset the
+configuration, and how to load the demo set later without losing it.
+
+> `GenerateDemoData` can still be run directly. It no longer costs the
+> configuration: the parameters are snapshotted around the CONFIG reset and
+> written back afterwards.
 
 ## 40 Hardware Articles
 
