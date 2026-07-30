@@ -213,7 +213,7 @@ Private Sub SeedConfig()
     r = 2
     ws.Cells(r, 1) = "WORKING_DAYS": ws.Cells(r, 2) = 250: ws.Cells(r, 3) = "Jours ouverts/an": r = r + 1
     ws.Cells(r, 1) = "OBSERVATION_DAYS": ws.Cells(r, 2) = 90: ws.Cells(r, 3) = "Jours d'observation": r = r + 1
-    ws.Cells(r, 1) = "ORDER_COST": ws.Cells(r, 2) = 801.45: ws.Cells(r, 3) = "Cout commande (DZD)": r = r + 1
+    ws.Cells(r, 1) = "ORDER_COST": ws.Cells(r, 2) = 300: ws.Cells(r, 3) = "Cout commande (DZD)": r = r + 1
     ws.Cells(r, 1) = "HOLDING_RATE": ws.Cells(r, 2) = 0.2: ws.Cells(r, 3) = "Taux de stockage (20%)": r = r + 1
     ws.Cells(r, 1) = "LEAD_TIME": ws.Cells(r, 2) = 2: ws.Cells(r, 3) = "Delai livraison (jours)": r = r + 1
     ws.Cells(r, 1) = "TAX_RATE": ws.Cells(r, 2) = 0.19: ws.Cells(r, 3) = "TVA (19%)": r = r + 1

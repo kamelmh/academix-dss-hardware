@@ -28,8 +28,8 @@
 ## Post-Import Steps
 
 1. Open CONFIG sheet and verify parameters:
-   - `WORKING_DAYS` = 250
-   - `ORDER_COST` = 801.45
+   - `WORKING_DAYS` = 300
+   - `ORDER_COST` = 300
    - `HOLDING_RATE` = 0.2
    - `LEAD_TIME` = 2
    - `TAX_RATE` = 0.19

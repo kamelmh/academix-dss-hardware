@@ -149,7 +149,7 @@ End Function
 ' ============================================================================
 
 Public Property Get WORKING_DAYS_PER_YEAR() As Integer
-    WORKING_DAYS_PER_YEAR = ReadConfigInt("WORKING_DAYS", 250)
+    WORKING_DAYS_PER_YEAR = ReadConfigInt("WORKING_DAYS", 300)
 End Property
 
 Public Property Get OBSERVATION_DAYS() As Integer
@@ -157,7 +157,7 @@ Public Property Get OBSERVATION_DAYS() As Integer
 End Property
 
 Public Property Get ORDER_COST() As Double
-    ORDER_COST = ReadConfigDouble("ORDER_COST", 801.45)
+    ORDER_COST = ReadConfigDouble("ORDER_COST", 300)
 End Property
 
 Public Property Get HOLDING_RATE() As Double
@@ -334,9 +334,9 @@ Public Sub SeedDefaultConfig()
     If lr > 1 Then ws.Rows("2:" & lr).Delete
     
     Dim r As Long: r = 2
-    ws.Cells(r, 1).Value = "WORKING_DAYS": ws.Cells(r, 2).Value = 250: r = r + 1
+    ws.Cells(r, 1).Value = "WORKING_DAYS": ws.Cells(r, 2).Value = 300: r = r + 1
     ws.Cells(r, 1).Value = "OBSERVATION_DAYS": ws.Cells(r, 2).Value = 90: r = r + 1
-    ws.Cells(r, 1).Value = "ORDER_COST": ws.Cells(r, 2).Value = 801.45: r = r + 1
+    ws.Cells(r, 1).Value = "ORDER_COST": ws.Cells(r, 2).Value = 300: r = r + 1
     ws.Cells(r, 1).Value = "HOLDING_RATE": ws.Cells(r, 2).Value = 0.2: r = r + 1
     ws.Cells(r, 1).Value = "LEAD_TIME": ws.Cells(r, 2).Value = 2: r = r + 1
     ws.Cells(r, 1).Value = "TAX_RATE": ws.Cells(r, 2).Value = 0.19: r = r + 1
