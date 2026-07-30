@@ -211,7 +211,7 @@ Private Sub SeedConfig()
     Set ws = ThisWorkbook.Sheets("CONFIG")
     Dim r As Long
     r = 2
-    ws.Cells(r, 1) = "WORKING_DAYS": ws.Cells(r, 2) = 250: ws.Cells(r, 3) = "Jours ouverts/an": r = r + 1
+    ws.Cells(r, 1) = "WORKING_DAYS": ws.Cells(r, 2) = 300: ws.Cells(r, 3) = "Jours ouverts/an": r = r + 1
     ws.Cells(r, 1) = "OBSERVATION_DAYS": ws.Cells(r, 2) = 90: ws.Cells(r, 3) = "Jours d'observation": r = r + 1
     ws.Cells(r, 1) = "ORDER_COST": ws.Cells(r, 2) = 300: ws.Cells(r, 3) = "Cout commande (DZD)": r = r + 1
     ws.Cells(r, 1) = "HOLDING_RATE": ws.Cells(r, 2) = 0.2: ws.Cells(r, 3) = "Taux de stockage (20%)": r = r + 1
