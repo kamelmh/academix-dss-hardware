@@ -262,6 +262,11 @@ Private Sub UpdateProjection(ws As Worksheet)
         .Font.Size = 8
     End With
     
+    ' Observation window, resolved once. ObservationDaysEffective walks
+    ' MOUVEMENTS, so calling it inside the per-article loop below would rescan
+    ' the whole sheet for every article.
+    Dim obsDays As Long: obsDays = mod_Config.ObservationDaysEffective()
+
     Dim rowNum As Long: rowNum = 3
     For i = 2 To lastArt
         artCode = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
@@ -270,9 +275,14 @@ Private Sub UpdateProjection(ws As Worksheet)
             Dim totalOut As Double
             If dict.Exists(artCode) Then totalOut = CDbl(dict(artCode)) Else totalOut = 0
             
+            ' Was: totalOut / OBSERVATION_DAYS, a fixed 90. That is correct for
+            ' the demo set, which really does span 90 days, but wrong for a real
+            ' store from its first week - three weeks of history divided by 90
+            ' understates daily consumption about fourfold and reports roughly
+            ' four times more runway than the shelf actually holds.
             Dim dailyCons As Double
-            If mod_Config.OBSERVATION_DAYS > 0 Then
-                dailyCons = totalOut / mod_Config.OBSERVATION_DAYS
+            If obsDays > 0 Then
+                dailyCons = totalOut / obsDays
             Else
                 dailyCons = 0
             End If

@@ -1,13 +1,24 @@
 Attribute VB_Name = "mod_DemoData"
 Option Explicit
 
+' Buffer for the CONFIG snapshot taken around NuclearClear (see SnapshotConfig).
+Private mCfgKeys() As String
+Private mCfgVals() As String
+Private mCfgCount As Long
+
 Public Sub GenerateDemoData()
     Application.ScreenUpdating = False
     Application.Calculation = xlCalculationManual
     Application.EnableEvents = False
     On Error GoTo ErrHandler
+    ' NuclearClear does Cells.Clear on CONFIG, which takes the business identity
+    ' and the operating parameters with it. Snapshotting here and restoring
+    ' after SeedConfig means loading the demo set no longer costs the owner the
+    ' details they entered in the setup wizard.
+    Call SnapshotConfig
     Call NuclearClear
     Call SeedConfig
+    Call RestoreConfigSnapshot
     Call SeedArticles40
     Call SeedSuppliers9
     Call SeedMovements90
@@ -224,7 +235,13 @@ Private Sub SeedConfig()
     ws.Cells(r, 1) = "BUSINESS_NIF": ws.Cells(r, 2) = "000100000000000": ws.Cells(r, 3) = "NIF": r = r + 1
     ws.Cells(r, 1) = "BUSINESS_NIS": ws.Cells(r, 2) = "00100000000000": ws.Cells(r, 3) = "NIS": r = r + 1
     ws.Cells(r, 1) = "BUSINESS_RC": ws.Cells(r, 2) = "00/00-0000000A00": ws.Cells(r, 3) = "RC": r = r + 1
-    ws.Cells(r, 1) = "SEASON": ws.Cells(r, 2) = "Printemps": ws.Cells(r, 3) = "Saison": r = r + 1
+    ' SEASON removed: a thesis parameter that nothing ever read.
+    ' OBSERVATION_DAYS stays because it is accurate for this data set -
+    ' SeedMovements90 really does generate 90 days.
+
+    ' NuclearClear left CONFIG unprotected in order to clear it; restore the
+    ' protection now that the sheet has been rewritten.
+    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     Debug.Print "[DemoData] Config seeded"
 End Sub
 
@@ -601,4 +618,67 @@ Private Sub AutoFitAllData()
     End If
     
     On Error GoTo 0
+End Sub
+
+' ============================================================================
+' CONFIG SNAPSHOT / RESTORE
+' ============================================================================
+' Loading the demo set must not cost the owner their configuration. NuclearClear
+' wipes the CONFIG sheet wholesale - it has to, because SeedConfig rewrites it
+' from row 2 - so the values are captured beforehand and written back over the
+' demo seeds afterwards. Whatever the owner set wins.
+'
+' FIRST_RUN travels with the snapshot on purpose: a demo load must not resurrect
+' the setup wizard on a system that has already been configured.
+' ============================================================================
+
+Private Sub SnapshotConfig()
+    mCfgCount = 0
+    Erase mCfgKeys
+    Erase mCfgVals
+
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets("CONFIG")
+    On Error GoTo 0
+    If ws Is Nothing Then Exit Sub
+
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    If lastRow < 2 Then Exit Sub
+
+    ReDim mCfgKeys(1 To lastRow - 1)
+    ReDim mCfgVals(1 To lastRow - 1)
+
+    Dim i As Long, k As String
+    For i = 2 To lastRow
+        k = Trim(CStr(ws.Cells(i, 1).Value))
+        If k <> "" Then
+            mCfgCount = mCfgCount + 1
+            mCfgKeys(mCfgCount) = k
+            mCfgVals(mCfgCount) = CStr(ws.Cells(i, 2).Value)
+        End If
+    Next i
+
+    Debug.Print "[DemoData] snapshot captured " & mCfgCount & " config key(s)"
+End Sub
+
+Private Sub RestoreConfigSnapshot()
+    If mCfgCount = 0 Then Exit Sub
+
+    Dim i As Long, v As String
+    For i = 1 To mCfgCount
+        v = mCfgVals(i)
+        ' Numeric parameters must go back as numbers, not as text that happens
+        ' to look numeric, or the ReadConfig* IsNumeric tests reject them and
+        ' fall through to the hardcoded defaults.
+        If v <> "" And IsNumeric(v) Then
+            mod_Config.WriteConfig mCfgKeys(i), CDbl(v)
+        Else
+            mod_Config.WriteConfig mCfgKeys(i), v
+        End If
+    Next i
+
+    Debug.Print "[DemoData] restored " & mCfgCount & " config key(s) over demo seeds"
+    mCfgCount = 0
 End Sub
