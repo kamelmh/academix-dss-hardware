@@ -574,3 +574,130 @@ Public Function GetStockStatus(ByVal sku As String) As String
         GetStockStatus = "OK"
     End If
 End Function
+
+' ================================================================================
+' FUNCTION: CalculateTurnoverRatio
+' Formula: Turnover = COGS / Average Inventory
+' BTS Ref: Semester 3 — Rotation des stocks
+' ================================================================================
+Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
+    On Error Resume Next
+    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then CalculateTurnoverRatio = 0: Exit Function
+
+    Dim currentYear As Integer: currentYear = Year(Date)
+    Dim totalOutValue As Double
+
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    totalOutValue = WorksheetFunction.SumIfs( _
+        wsMouv.Columns(COL_MOUV_VALEUR), _
+        wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
+        wsMouv.Columns(COL_MOUV_TYPE), "OUT", _
+        wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+
+    Dim avgInventory As Double
+    avgInventory = GetArticleStock(sku) * GetUnitPrice(sku)
+
+    If avgInventory > 0 Then
+        CalculateTurnoverRatio = totalOutValue / avgInventory
+    Else
+        CalculateTurnoverRatio = 0
+    End If
+    On Error GoTo 0
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateDSI
+' Formula: DSI = (Average Inventory / COGS) x 365
+' BTS Ref: Semester 3 — Jours de stockage (Days Sales of Inventory)
+' ================================================================================
+Public Function CalculateDSI(ByVal sku As String) As Double
+    Dim turnover As Double: turnover = CalculateTurnoverRatio(sku)
+    If turnover > 0 Then
+        CalculateDSI = 365 / turnover
+    Else
+        CalculateDSI = 999
+    End If
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateStockCoverage
+' Formula: Coverage = Current Stock / Average Daily Usage
+' BTS Ref: Semester 3 — Couverture de stock
+' ================================================================================
+Public Function CalculateStockCoverage(ByVal sku As String) As Double
+    Dim annualDemand As Double: annualDemand = GetAnnualDemandFromHistory(sku)
+    If annualDemand <= 0 Then CalculateStockCoverage = 999: Exit Function
+
+    Dim avgDaily As Double: avgDaily = annualDemand / mod_Config.WORKING_DAYS_PER_YEAR
+    Dim currentStock As Double: currentStock = GetArticleStock(sku)
+
+    If avgDaily > 0 Then
+        CalculateStockCoverage = currentStock / avgDaily
+    Else
+        CalculateStockCoverage = 999
+    End If
+End Function
+
+' ================================================================================
+' FUNCTION: CalculatePriceVariance
+' Formula: (Actual Price - Standard Price) x Actual Quantity
+' BTS Ref: Semester 3 — Analyse des ecarts (Budget Management)
+' ================================================================================
+Public Function CalculatePriceVariance(ByVal sku As String, _
+                                       ByVal stdPrice As Double) As Double
+    Dim actualPrice As Double: actualPrice = GetUnitPrice(sku)
+    Dim qtyPurchased As Double: qtyPurchased = GetTotalPurchasedQty(sku)
+    CalculatePriceVariance = (actualPrice - stdPrice) * qtyPurchased
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateQuantityVariance
+' Formula: (Actual Quantity - Standard Quantity) x Standard Price
+' BTS Ref: Semester 3 — Analyse des ecarts (Budget Management)
+' ================================================================================
+Public Function CalculateQuantityVariance(ByVal sku As String, _
+                                           ByVal stdQty As Double) As Double
+    Dim actualQty As Double: actualQty = GetAnnualDemandFromHistory(sku)
+    Dim unitPrice As Double: unitPrice = GetUnitPrice(sku)
+    CalculateQuantityVariance = (actualQty - stdQty) * unitPrice
+End Function
+
+' ================================================================================
+' HELPER: GetUnitPrice
+' ================================================================================
+Private Function GetUnitPrice(ByVal sku As String) As Double
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsArt Is Nothing Then GetUnitPrice = 0: Exit Function
+
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then
+        GetUnitPrice = 0
+    Else
+        GetUnitPrice = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+    End If
+End Function
+
+' ================================================================================
+' HELPER: GetTotalPurchasedQty
+' ================================================================================
+Private Function GetTotalPurchasedQty(ByVal sku As String) As Double
+    On Error Resume Next
+    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then GetTotalPurchasedQty = 0: Exit Function
+
+    Dim currentYear As Integer: currentYear = Year(Date)
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    GetTotalPurchasedQty = WorksheetFunction.SumIfs( _
+        wsMouv.Columns(COL_MOUV_QTE), _
+        wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
+        wsMouv.Columns(COL_MOUV_TYPE), "IN", _
+        wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    On Error GoTo 0
+End Function
