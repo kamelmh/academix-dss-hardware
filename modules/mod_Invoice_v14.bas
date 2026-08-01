@@ -132,7 +132,7 @@ Public Sub SaveInvoice(ByVal invoiceData As String)
     
 ErrorHandler:
     On Error Resume Next
-    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    If Not ws Is Nothing Then ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     MsgBox "Erreur sauvegarde facture: " & Err.Description, vbCritical, mod_Config.SYS_TITLE
 End Sub
 

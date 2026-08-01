@@ -284,7 +284,7 @@ Public Sub SetupAccueilButtons()
     
 ErrorHandler:
     On Error Resume Next
-    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    If Not ws Is Nothing Then ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     MsgBox "Erreur setup ACCUEIL: " & Err.Description, vbCritical, mod_Config.SYS_TITLE
     On Error GoTo 0
 End Sub
@@ -343,7 +343,7 @@ Public Sub RefreshAccueilKPIs()
 ErrorHandler:
     Debug.Print "[KPI] Error: " & Err.Number & " - " & Err.Description
     On Error Resume Next
-    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    If Not ws Is Nothing Then ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     On Error GoTo 0
 End Sub
 

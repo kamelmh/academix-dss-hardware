@@ -97,9 +97,31 @@ Public Property Get DOC_TYPE_DA As String
 End Property
 
 Public Property Get MASTER_PWD() As String
-    ' Password per-installation — change this before distributing
-    ' Customers should set their own in mod_Config or CONFIG sheet
-    MASTER_PWD = "CHANGEME_" & Format(Now, "YYYYMMDD")
+    ' Read from CONFIG sheet (set once by first-run wizard)
+    ' Fallback: generate and store a random password
+    Dim ws As Worksheet, val As String
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets("CONFIG")
+    On Error GoTo 0
+    If Not ws Is Nothing Then
+        Dim r As Variant
+        r = Application.Match("MASTER_PWD", ws.Range("A:A"), 0)
+        If Not IsError(r) Then val = ws.Cells(r, 2).Value
+    End If
+    If Len(val) = 0 Or val = "CHANGEME" Then
+        val = "DSS_" & Format(Now, "YYMMDD") & "_" & Format(Int(Rnd * 9000) + 1000, "0000")
+        If Not ws Is Nothing Then
+            If Not IsError(r) Then
+                ws.Cells(r, 2).Value = val
+            Else
+                Dim nr As Long: nr = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row + 1
+                ws.Cells(nr, 1).Value = "MASTER_PWD"
+                ws.Cells(nr, 2).Value = val
+                ws.Cells(nr, 3).Value = "Mot de passe maitre (genere automatiquement)"
+            End If
+        End If
+    End If
+    MASTER_PWD = val
 End Property
 
 Public Property Get APP_VERSION() As String

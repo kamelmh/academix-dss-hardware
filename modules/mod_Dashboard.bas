@@ -32,7 +32,7 @@ Public Sub RefreshDashboard()
     
 ErrorHandler:
     On Error Resume Next
-    ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+    If Not ws Is Nothing Then ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     MsgBox "Erreur actualisation: " & Err.Description, vbCritical, mod_Config.SYS_TITLE
     On Error GoTo 0
 End Sub
