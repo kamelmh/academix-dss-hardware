@@ -126,7 +126,7 @@ Private Function GetSupplierFormCode() As String
     c = c & "    If ws Is Nothing Then Exit Sub" & vbCrLf
     c = c & "    Dim r As Variant" & vbCrLf
     c = c & "    r = Application.Match(code, ws.Range(""A:A""), 0)" & vbCrLf
-    c = c & "    If IsError(r) Then MsgBox ""Supplier not found."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If IsError(r) Then MsgBox ""Fournisseur introuvable."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    txtRaisonSociale.Value = ws.Cells(r, 2).Value" & vbCrLf
     c = c & "    txtAdresse.Value = ws.Cells(r, 3).Value" & vbCrLf
     c = c & "    txtTelephone.Value = ws.Cells(r, 4).Value" & vbCrLf
@@ -137,8 +137,8 @@ Private Function GetSupplierFormCode() As String
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnSave_Click()" & vbCrLf
-    c = c & "    If Len(Trim(txtCode.Value)) = 0 Then MsgBox ""Enter code."", vbExclamation: Exit Sub" & vbCrLf
-    c = c & "    If Len(Trim(txtRaisonSociale.Value)) = 0 Then MsgBox ""Enter raison sociale."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Len(Trim(txtCode.Value)) = 0 Then MsgBox ""Indiquez le code."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Len(Trim(txtRaisonSociale.Value)) = 0 Then MsgBox ""Indiquez la raison sociale."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    If MsgBox(""Save supplier?"", vbQuestion + vbYesNo) = vbNo Then Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet" & vbCrLf
     c = c & "    Set ws = ThisWorkbook.Sheets(""FOURNISSEURS"")" & vbCrLf
@@ -161,7 +161,7 @@ Private Function GetSupplierFormCode() As String
     c = c & "    ws.Cells(nr, 7).Value = Trim(txtRC.Value)" & vbCrLf
     c = c & "    ws.Cells(nr, 8).Value = Trim(txtArtImpot.Value)" & vbCrLf
     c = c & "    ws.Protect Password:=mod_Config.MASTER_PWD" & vbCrLf
-    c = c & "    MsgBox ""Supplier saved!"", vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Fournisseur enregistre!"", vbInformation" & vbCrLf
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnNew_Click()" & vbCrLf
@@ -178,18 +178,18 @@ Private Function GetSupplierFormCode() As String
     c = c & vbCrLf
     c = c & "Private Sub btnDelete_Click()" & vbCrLf
     c = c & "    Dim code As String: code = UCase(Trim(txtCode.Value))" & vbCrLf
-    c = c & "    If Len(code) = 0 Then MsgBox ""Enter code first."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Len(code) = 0 Then MsgBox ""Indiquez le code d'abord."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    If MsgBox(""Delete supplier "" & code & ""?"", vbQuestion + vbYesNo) = vbNo Then Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet" & vbCrLf
     c = c & "    Set ws = ThisWorkbook.Sheets(""FOURNISSEURS"")" & vbCrLf
     c = c & "    Dim r As Variant" & vbCrLf
     c = c & "    r = Application.Match(code, ws.Range(""A:A""), 0)" & vbCrLf
-    c = c & "    If IsError(r) Then MsgBox ""Not found."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If IsError(r) Then MsgBox ""Introuvable."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    ws.Unprotect Password:=mod_Config.MASTER_PWD" & vbCrLf
     c = c & "    ws.Rows(r).Delete" & vbCrLf
     c = c & "    ws.Protect Password:=mod_Config.MASTER_PWD" & vbCrLf
     c = c & "    Call btnNew_Click" & vbCrLf
-    c = c & "    MsgBox ""Supplier deleted."", vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Fournisseur supprime."", vbInformation" & vbCrLf
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnClose_Click()" & vbCrLf

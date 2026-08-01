@@ -161,7 +161,7 @@ Private Function GetSearchFormCode() As String
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnView_Click()" & vbCrLf
-    c = c & "    If lstResults.ListIndex < 0 Then MsgBox ""Select an item"", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If lstResults.ListIndex < 0 Then MsgBox ""Selectionnez un article"", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    Dim selVal As String: selVal = lstResults.Value" & vbCrLf
     c = c & "    Dim selCol1 As String: selCol1 = lstResults.List(lstResults.ListIndex, 0)" & vbCrLf
     c = c & "    Dim scope As String: scope = cboScope.Text" & vbCrLf

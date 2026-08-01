@@ -148,7 +148,7 @@ Private Function GetFormCode() As String
     c = c & "        Dim ws As Worksheet" & vbCrLf
     c = c & "        On Error Resume Next: Set ws = ThisWorkbook.Sheets(""BARCODES""): On Error GoTo 0" & vbCrLf
     c = c & "        If ws Is Nothing Then" & vbCrLf
-    c = c & "            MsgBox ""BARCODES sheet not found. Generate barcodes first."", vbExclamation" & vbCrLf
+    c = c & "            MsgBox ""Feuille BARCODES introuvable. Generez d'abord les codes-barres."", vbExclamation" & vbCrLf
     c = c & "            Exit Sub" & vbCrLf
     c = c & "        End If" & vbCrLf
     c = c & "        Dim lr As Long: lr = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row" & vbCrLf
@@ -162,7 +162,7 @@ Private Function GetFormCode() As String
     c = c & "                Exit Sub" & vbCrLf
     c = c & "            End If" & vbCrLf
     c = c & "        Next i" & vbCrLf
-    c = c & "        MsgBox ""Barcode not found: "" & bc, vbExclamation" & vbCrLf
+    c = c & "        MsgBox ""Code-barres introuvable: "" & bc, vbExclamation" & vbCrLf
     c = c & "        txtBarcode.Value = """"" & vbCrLf
     c = c & "        txtBarcode.SetFocus" & vbCrLf
     c = c & "    End If" & vbCrLf
@@ -260,7 +260,7 @@ Private Function GetFormCode() As String
     c = c & "    Else" & vbCrLf
     c = c & "        Call mod_StockEngine.UpdateArticleStockBalance(txtCode.Value, ""OUT"", CLng(qty))" & vbCrLf
     c = c & "    End If" & vbCrLf
-    c = c & "    MsgBox ""Saved! Stock: "" & Format(mod_StockEngine.GetArticleStock(txtCode.Value), ""#,##0""), vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Enregistre! Stock: "" & Format(mod_StockEngine.GetArticleStock(txtCode.Value), ""#,##0""), vbInformation" & vbCrLf
     c = c & "    Call btnNew_Click" & vbCrLf
     c = c & "    Exit Sub" & vbCrLf
     c = c & "ErrorHandler:" & vbCrLf
@@ -286,7 +286,7 @@ Private Function GetFormCode() As String
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnDelete_Click()" & vbCrLf
-    c = c & "    MsgBox ""Select from sheet to delete."", vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Selectionnez une ligne dans le tableau a supprimer."", vbInformation" & vbCrLf
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnClose_Click()" & vbCrLf

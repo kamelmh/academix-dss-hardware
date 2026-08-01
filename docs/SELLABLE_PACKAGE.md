@@ -85,14 +85,19 @@ The Academix DSS is a complete inventory management system for Algerian hardware
 1. Copy `ERP_dss_v13.4_hardware_store.xlsm` to your computer
 2. Open with Excel 2016 or later
 3. Enable macros when prompted
-4. Follow the setup wizard
-5. Start using the system!
+4. **IMPORTANT:** Trust VBA project access:
+   - Fichier > Options > Centre de gestion de la confidentialite
+   - Parametres du Centre > Parametres des macro
+   - Cocher **"Faire confiance a l'acces au modele d'objet du projet VBA"**
+5. Follow the setup wizard
+6. Start using the system!
 
 ### System Requirements
 - Windows 7 or later
 - Microsoft Excel 2016 or later
 - 50 MB free disk space
 - Macro support enabled
+- VBA project access trusted (required for first-run wizard)
 
 ## Support Structure
 

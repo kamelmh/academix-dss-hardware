@@ -6,6 +6,16 @@ articles, 90 days of generated movements, and a placeholder identity
 opposite - an empty ledger carrying its own identity - while the demo set has to
 stay reachable for training and for demonstrating the system.
 
+## Prerequisites
+
+Before the first-run wizard works, Excel must trust VBA project access:
+
+1. Fichier > Options > Centre de gestion de la confidentialite
+2. Parametres du Centre > Parametres des macro
+3. Cocher **"Faire confiance a l'acces au modele d'objet du projet VBA"**
+
+Without this, the wizard cannot create UserForms at runtime and will fail silently.
+
 ## What happens on first open
 
 `Auto_Open` calls `mod_FirstRun.FirstRunCheck`, which:

@@ -223,8 +223,8 @@ Private Function GetArticleFormCode() As String
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnSave_Click()" & vbCrLf
-    c = c & "    If Len(Trim(txtCode.Value)) = 0 Then MsgBox ""Enter code."", vbExclamation: Exit Sub" & vbCrLf
-    c = c & "    If Len(Trim(txtDesignation.Value)) = 0 Then MsgBox ""Enter designation."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Len(Trim(txtCode.Value)) = 0 Then MsgBox ""Indiquez le code article."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Len(Trim(txtDesignation.Value)) = 0 Then MsgBox ""Indiquez la designation."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    If MsgBox(""Save article?"", vbQuestion + vbYesNo) = vbNo Then Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet" & vbCrLf
     c = c & "    Set ws = ThisWorkbook.Sheets(""ARTICLES"")" & vbCrLf
@@ -250,7 +250,7 @@ Private Function GetArticleFormCode() As String
     c = c & "    ws.Cells(nr, 13).Value = cboMethode.Value" & vbCrLf
     c = c & "    ws.Cells(nr, 14).Value = Val(Replace(txtDelai.Value, "","", """"))" & vbCrLf
     c = c & "    ws.Protect Password:=mod_Config.MASTER_PWD" & vbCrLf
-    c = c & "    MsgBox ""Article saved!"", vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Article enregistre!"", vbInformation" & vbCrLf
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnNew_Click()" & vbCrLf
@@ -272,18 +272,18 @@ Private Function GetArticleFormCode() As String
     c = c & vbCrLf
     c = c & "Private Sub btnDelete_Click()" & vbCrLf
     c = c & "    Dim code As String: code = UCase(Trim(txtCode.Value))" & vbCrLf
-    c = c & "    If Len(code) = 0 Then MsgBox ""Enter code first."", vbExclamation: Exit Sub" & vbCrLf
-    c = c & "    If MsgBox(""Delete article "" & code & ""?"", vbQuestion + vbYesNo) = vbNo Then Exit Sub" & vbCrLf
+    c = c & "    If Len(code) = 0 Then MsgBox ""Indiquez le code d'abord."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If MsgBox(""Supprimer l'article "" & code & ""?"", vbQuestion + vbYesNo) = vbNo Then Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet" & vbCrLf
     c = c & "    Set ws = ThisWorkbook.Sheets(""ARTICLES"")" & vbCrLf
     c = c & "    Dim r As Variant" & vbCrLf
     c = c & "    r = Application.Match(code, ws.Range(""A:A""), 0)" & vbCrLf
-    c = c & "    If IsError(r) Then MsgBox ""Article not found."", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If IsError(r) Then MsgBox ""Article introuvable."", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    ws.Unprotect Password:=mod_Config.MASTER_PWD" & vbCrLf
     c = c & "    ws.Rows(r).Delete" & vbCrLf
     c = c & "    ws.Protect Password:=mod_Config.MASTER_PWD" & vbCrLf
     c = c & "    Call btnNew_Click" & vbCrLf
-    c = c & "    MsgBox ""Article deleted."", vbInformation" & vbCrLf
+    c = c & "    MsgBox ""Article supprime."", vbInformation" & vbCrLf
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnClose_Click()" & vbCrLf

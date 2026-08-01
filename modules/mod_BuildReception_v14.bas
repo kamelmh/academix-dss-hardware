@@ -123,8 +123,8 @@ Private Function GetReceptionFormCode() As String
     c = c & "End Sub" & vbCrLf
     c = c & vbCrLf
     c = c & "Private Sub btnAddLine_Click()" & vbCrLf
-    c = c & "    If Trim(txtCode.Text) = """" Then MsgBox ""Enter code"", vbExclamation: Exit Sub" & vbCrLf
-    c = c & "    If Val(txtQty.Text) <= 0 Then MsgBox ""Enter valid qty"", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Trim(txtCode.Text) = """" Then MsgBox ""Indiquez le code article"", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If Val(txtQty.Text) <= 0 Then MsgBox ""Indiquez une quantite valide"", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet: Set ws = ThisWorkbook.Sheets(""ARTICLES"")" & vbCrLf
     c = c & "    Dim lr As Long: lr = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row" & vbCrLf
     c = c & "    Dim pu As Double: pu = 0" & vbCrLf
@@ -134,7 +134,7 @@ Private Function GetReceptionFormCode() As String
     c = c & "            pu = Val(ws.Cells(i, 8).Value): Exit For" & vbCrLf
     c = c & "        End If" & vbCrLf
     c = c & "    Next i" & vbCrLf
-    c = c & "    If pu = 0 Then MsgBox ""Article not found"", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If pu = 0 Then MsgBox ""Article introuvable"", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    Dim qty As Double: qty = Val(txtQty.Text)" & vbCrLf
     c = c & "    Dim total As Double: total = qty * pu" & vbCrLf
     c = c & "    lstLines.AddItem txtCode.Text" & vbCrLf
@@ -153,7 +153,7 @@ Private Function GetReceptionFormCode() As String
     c = c & vbCrLf
     c = c & "Private Sub btnPrint_Click()" & vbCrLf
     c = c & "    On Error GoTo PrintErrHandler" & vbCrLf
-    c = c & "    If lstLines.ListCount = 0 Then MsgBox ""No lines to print"", vbExclamation: Exit Sub" & vbCrLf
+    c = c & "    If lstLines.ListCount = 0 Then MsgBox ""Aucune ligne a imprimer"", vbExclamation: Exit Sub" & vbCrLf
     c = c & "    Dim ws As Worksheet: Set ws = ThisWorkbook.Sheets(""BON_RECEPTION"")" & vbCrLf
     c = c & "    ws.Unprotect Password:=mod_Config.MASTER_PWD" & vbCrLf
     c = c & "    ws.Cells(6, 2).Value = txtRef.Text" & vbCrLf
