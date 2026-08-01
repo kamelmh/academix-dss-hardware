@@ -97,7 +97,9 @@ Public Property Get DOC_TYPE_DA As String
 End Property
 
 Public Property Get MASTER_PWD() As String
-    MASTER_PWD = "erp_secure_pwd_2026"
+    ' Password per-installation — change this before distributing
+    ' Customers should set their own in mod_Config or CONFIG sheet
+    MASTER_PWD = "CHANGEME_" & Format(Now, "YYYYMMDD")
 End Property
 
 Public Property Get APP_VERSION() As String

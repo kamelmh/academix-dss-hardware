@@ -67,6 +67,7 @@ Private Sub NuclearClear()
         ws.Range("A1:N1").Interior.Color = RGB(0, 70, 127)
         ws.Range("A1:N1").Font.Color = RGB(255, 255, 255)
         ws.Columns("A:N").AutoFit
+        ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     End If
     Set ws = Nothing
     
@@ -92,6 +93,7 @@ Private Sub NuclearClear()
         ws.Range("A1:L1").Interior.Color = RGB(0, 70, 127)
         ws.Range("A1:L1").Font.Color = RGB(255, 255, 255)
         ws.Columns("A:L").AutoFit
+        ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     End If
     Set ws = Nothing
     
@@ -113,6 +115,7 @@ Private Sub NuclearClear()
         ws.Range("A1:H1").Interior.Color = RGB(0, 70, 127)
         ws.Range("A1:H1").Font.Color = RGB(255, 255, 255)
         ws.Columns("A:H").AutoFit
+        ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     End If
     Set ws = Nothing
     
@@ -128,6 +131,7 @@ Private Sub NuclearClear()
         ws.Range("A1:C1").Interior.Color = RGB(0, 70, 127)
         ws.Range("A1:C1").Font.Color = RGB(255, 255, 255)
         ws.Columns("A:C").AutoFit
+        ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     End If
     Set ws = Nothing
     

@@ -592,7 +592,7 @@ Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
     totalOutValue = WorksheetFunction.SumIfs( _
         wsMouv.Columns(COL_MOUV_VALEUR), _
         wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
-        wsMouv.Columns(COL_MOUV_TYPE), "OUT", _
+        wsMouv.Columns(COL_MOUV_TYPE), "SORTIE", _
         wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 
