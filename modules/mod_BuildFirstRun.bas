@@ -129,7 +129,7 @@ Public Sub BuildFirstRunForm(Optional ByVal silent As Boolean = False)
 
 ErrHandler:
     If Not silent Then
-        MsgBox "Error " & Err.Number & ": " & Err.Description, vbCritical, "Error"
+        MsgBox "Erreur " & Err.Number & ": " & Err.Description, vbCritical, "Erreur"
     Else
         Debug.Print "[BuildFirstRun] " & Err.Number & ": " & Err.Description
     End If

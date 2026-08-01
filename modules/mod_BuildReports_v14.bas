@@ -60,7 +60,7 @@ Public Sub BuildReportsForm()
     Exit Sub
     
 ErrHandler:
-    MsgBox "Error " & Err.Number & ": " & Err.Description, vbCritical, "Error"
+    MsgBox "Erreur " & Err.Number & ": " & Err.Description, vbCritical, "Erreur"
 End Sub
 
 Private Function GetReportsFormCode() As String

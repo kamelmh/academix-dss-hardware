@@ -586,21 +586,22 @@ Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
     If wsMouv Is Nothing Then CalculateTurnoverRatio = 0: Exit Function
 
     Dim currentYear As Integer: currentYear = Year(Date)
-    Dim totalOutValue As Double
+    Dim totalOutQty As Double
 
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
-    totalOutValue = WorksheetFunction.SumIfs( _
-        wsMouv.Columns(COL_MOUV_VALEUR), _
+    totalOutQty = WorksheetFunction.SumIfs( _
+        wsMouv.Columns(COL_MOUV_QTE), _
         wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
         wsMouv.Columns(COL_MOUV_TYPE), "SORTIE", _
         wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 
+    Dim cogs As Double: cogs = totalOutQty * GetCMUP(sku)
     Dim avgInventory As Double
     avgInventory = GetArticleStock(sku) * GetCMUP(sku)
 
     If avgInventory > 0 Then
-        CalculateTurnoverRatio = totalOutValue / avgInventory
+        CalculateTurnoverRatio = cogs / avgInventory
     Else
         CalculateTurnoverRatio = 0
     End If

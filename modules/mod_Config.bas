@@ -96,9 +96,15 @@ Public Property Get DOC_TYPE_DA As String
     DOC_TYPE_DA = "Demande d'Achat"
 End Property
 
+' Module-level cache — avoids 400+ sheet lookups per refresh cycle
+Private cachedPwd As String
+Private pwdCached As Boolean
+
 Public Property Get MASTER_PWD() As String
+    ' Return cached value if already loaded this session
+    If pwdCached Then MASTER_PWD = cachedPwd: Exit Property
+    
     ' Read from CONFIG sheet (set once by first-run wizard)
-    ' Fallback: generate and store a random password
     Dim ws As Worksheet, val As String
     On Error Resume Next
     Set ws = ThisWorkbook.Sheets("CONFIG")
@@ -108,8 +114,13 @@ Public Property Get MASTER_PWD() As String
         r = Application.Match("MASTER_PWD", ws.Range("A:A"), 0)
         If Not IsError(r) Then val = ws.Cells(r, 2).Value
     End If
+    
+    ' Fallback: generate random password (Randomize ensures true randomness)
     If Len(val) = 0 Or val = "CHANGEME" Then
+        Randomize
         val = "DSS_" & Format(Now, "YYMMDD") & "_" & Format(Int(Rnd * 9000) + 1000, "0000")
+        ' Guard write — CONFIG may be protected
+        On Error Resume Next
         If Not ws Is Nothing Then
             If Not IsError(r) Then
                 ws.Cells(r, 2).Value = val
@@ -120,7 +131,12 @@ Public Property Get MASTER_PWD() As String
                 ws.Cells(nr, 3).Value = "Mot de passe maitre (genere automatiquement)"
             End If
         End If
+        On Error GoTo 0
     End If
+    
+    ' Cache for this session
+    cachedPwd = val
+    pwdCached = True
     MASTER_PWD = val
 End Property
 

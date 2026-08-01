@@ -77,7 +77,7 @@ Public Sub BuildConfigForm()
     Exit Sub
     
 ErrHandler:
-    MsgBox "Error " & Err.Number & ": " & Err.Description, vbCritical, "Error"
+    MsgBox "Erreur " & Err.Number & ": " & Err.Description, vbCritical, "Erreur"
 End Sub
 
 Private Function GetConfigFormCode() As String
