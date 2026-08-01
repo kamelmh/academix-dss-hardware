@@ -597,7 +597,7 @@ Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 
     Dim avgInventory As Double
-    avgInventory = GetArticleStock(sku) * GetUnitPrice(sku)
+    avgInventory = GetArticleStock(sku) * GetCMUP(sku)
 
     If avgInventory > 0 Then
         CalculateTurnoverRatio = totalOutValue / avgInventory
@@ -680,6 +680,27 @@ Private Function GetUnitPrice(ByVal sku As String) As Double
         GetUnitPrice = 0
     Else
         GetUnitPrice = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+    End If
+End Function
+
+' HELPER: GetCMUP
+' Returns Weighted Average Cost (CMUP) for an article, falls back to PU if CMUP=0
+' ================================================================================
+Private Function GetCMUP(ByVal sku As String) As Double
+    Dim wsArt As Worksheet
+    On Error Resume Next
+    Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    On Error GoTo 0
+    If wsArt Is Nothing Then GetCMUP = 0: Exit Function
+
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then
+        GetCMUP = 0
+    Else
+        Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, COL_ART_CMUP).Value)
+        If cmup <= 0 Then cmup = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+        GetCMUP = cmup
     End If
 End Function
 

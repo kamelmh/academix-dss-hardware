@@ -131,7 +131,7 @@ Private Function GetDashboardFormCode() As String
     c = c & "        Dim lr As Long: lr = wsA.Cells(wsA.Rows.Count, 1).End(xlUp).Row" & vbCrLf
     c = c & "        Dim i As Long" & vbCrLf
     c = c & "        For i = 2 To lr" & vbCrLf
-    c = c & "            stockVal = stockVal + (Val(wsA.Cells(i, 3).Value) * Val(wsA.Cells(i, 8).Value))" & vbCrLf
+    c = c & "            stockVal = stockVal + (Val(wsA.Cells(i, 3).Value) * IIf(Val(wsA.Cells(i, 12).Value) > 0, Val(wsA.Cells(i, 12).Value), Val(wsA.Cells(i, 8).Value)))" & vbCrLf
     c = c & "            If Val(wsA.Cells(i, 3).Value) <= Val(wsA.Cells(i, 4).Value) Then ruptCount = ruptCount + 1" & vbCrLf
     c = c & "            If Val(wsA.Cells(i, 3).Value) <= Val(wsA.Cells(i, 10).Value) Then alertCount = alertCount + 1" & vbCrLf
     c = c & "        Next i" & vbCrLf

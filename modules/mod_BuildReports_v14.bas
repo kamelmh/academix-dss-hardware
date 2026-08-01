@@ -89,7 +89,7 @@ Private Function GetReportsFormCode() As String
     c = c & "        Case ""ABC Analysis""" & vbCrLf
     c = c & "            For i = 2 To lr" & vbCrLf
     c = c & "                Dim abc As String: abc = ws.Cells(i, 6).Value" & vbCrLf
-    c = c & "                Dim stockValue As Double: stockValue = Val(ws.Cells(i, 3).Value) * Val(ws.Cells(i, 8).Value)" & vbCrLf
+    c = c & "                Dim stockValue As Double: stockValue = Val(ws.Cells(i, 3).Value) * IIf(Val(ws.Cells(i, 12).Value) > 0, Val(ws.Cells(i, 12).Value), Val(ws.Cells(i, 8).Value))" & vbCrLf
     c = c & "                lstPreview.AddItem ws.Cells(i, 1).Value" & vbCrLf
     c = c & "                lstPreview.List(lstPreview.ListCount - 1, 1) = ws.Cells(i, 2).Value" & vbCrLf
     c = c & "                lstPreview.List(lstPreview.ListCount - 1, 2) = abc" & vbCrLf
@@ -108,7 +108,7 @@ Private Function GetReportsFormCode() As String
     c = c & "            Dim cat As String" & vbCrLf
     c = c & "            For i = 2 To lr" & vbCrLf
     c = c & "                totalQty = totalQty + Val(ws.Cells(i, 3).Value)" & vbCrLf
-    c = c & "                totalVal = totalVal + (Val(ws.Cells(i, 3).Value) * Val(ws.Cells(i, 8).Value))" & vbCrLf
+    c = c & "                totalVal = totalVal + (Val(ws.Cells(i, 3).Value) * IIf(Val(ws.Cells(i, 12).Value) > 0, Val(ws.Cells(i, 12).Value), Val(ws.Cells(i, 8).Value)))" & vbCrLf
     c = c & "            Next i" & vbCrLf
     c = c & "            lstPreview.AddItem ""Total Articles: "" & (lr - 1)" & vbCrLf
     c = c & "            lstPreview.List(lstPreview.ListCount - 1, 1) = ""Total Stock: "" & Format(totalQty, ""#,##0"") & "" u""" & vbCrLf

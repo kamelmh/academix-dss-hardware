@@ -516,7 +516,7 @@ ErrorHandler:
     GetSupplierCount = "0"
 End Function
 
-' Get total stock value from ARTICLES sheet (Stock * PU)
+' Get total stock value from ARTICLES sheet (Stock * CMUP)
 Private Function GetStockValue() As String
     On Error GoTo ErrorHandler
     Dim ws As Worksheet
@@ -535,12 +535,13 @@ Private Function GetStockValue() As String
     
     For i = 2 To lastRow
         Dim stock As Double
-        Dim pu As Double
+        Dim cmup As Double
         
         stock = Val(ws.Cells(i, mod_Config.COL_ART_STOCK).Value)
-        pu = Val(ws.Cells(i, mod_Config.COL_ART_PU).Value)
+        cmup = Val(ws.Cells(i, mod_Config.COL_ART_CMUP).Value)
+        If cmup <= 0 Then cmup = Val(ws.Cells(i, mod_Config.COL_ART_PU).Value)
         
-        totalValue = totalValue + (stock * pu)
+        totalValue = totalValue + (stock * cmup)
     Next i
     
     ' Format with comma separator

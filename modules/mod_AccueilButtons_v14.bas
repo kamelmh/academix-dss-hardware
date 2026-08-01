@@ -312,7 +312,9 @@ Public Sub RefreshAccueilKPIs()
             artCount = lr - 1
             Dim i As Long
             For i = 2 To lr
-                stockVal = stockVal + (CDbl(wsA.Cells(i, 3).Value) * CDbl(wsA.Cells(i, 8).Value))
+                Dim cmupVal As Double: cmupVal = CDbl(wsA.Cells(i, 12).Value)
+                If cmupVal <= 0 Then cmupVal = CDbl(wsA.Cells(i, 8).Value)
+                stockVal = stockVal + (CDbl(wsA.Cells(i, 3).Value) * cmupVal)
             Next i
         End If
     End If

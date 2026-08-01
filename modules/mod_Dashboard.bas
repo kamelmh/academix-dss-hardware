@@ -61,9 +61,10 @@ Private Sub UpdateKPIs(ws As Worksheet)
     On Error Resume Next
     For i = 2 To totalSKUs + 1
         Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
-        Dim pu As Double: pu = Val(wsArt.Cells(i, COL_ART_PU).Value)
+        Dim cmup As Double: cmup = Val(wsArt.Cells(i, COL_ART_CMUP).Value)
+        If cmup <= 0 Then cmup = Val(wsArt.Cells(i, COL_ART_PU).Value)
         
-        totalValue = totalValue + (stock * pu)
+        totalValue = totalValue + (stock * cmup)
         
         Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
         Dim ss As Double: ss = mod_StockEngine.GetSafetyStock(sku)

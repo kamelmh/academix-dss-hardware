@@ -35,13 +35,14 @@ Public Sub GenerateABCReport()
         Dim artCode As String: artCode = Trim(wsArt.Cells(i, 1).Value)
         If artCode <> "" Then
             Dim annualDemand As Double: annualDemand = mod_StockEngine.GetAnnualDemandFromHistory(artCode)
-            Dim pu As Double: pu = Val(wsArt.Cells(i, 8).Value)
-            Dim consumptionValue As Double: consumptionValue = annualDemand * pu
+            Dim cmup As Double: cmup = Val(wsArt.Cells(i, 12).Value)
+            If cmup <= 0 Then cmup = Val(wsArt.Cells(i, 8).Value)
+            Dim consumptionValue As Double: consumptionValue = annualDemand * cmup
             
             data(i - 1, 1) = artCode
             data(i - 1, 2) = wsArt.Cells(i, 2).Value
             data(i - 1, 3) = annualDemand
-            data(i - 1, 4) = pu
+            data(i - 1, 4) = cmup
             data(i - 1, 5) = consumptionValue
             data(i - 1, 6) = wsArt.Cells(i, 6).Value  ' ABC class
             
@@ -145,8 +146,9 @@ Public Sub GenerateStockAgingReport()
         Dim artCode As String: artCode = Trim(wsArt.Cells(i, 1).Value)
         If artCode <> "" Then
             Dim stock As Double: stock = Val(wsArt.Cells(i, 3).Value)
-            Dim pu As Double: pu = Val(wsArt.Cells(i, 8).Value)
-            Dim value As Double: value = stock * pu
+            Dim cmup As Double: cmup = Val(wsArt.Cells(i, 12).Value)
+            If cmup <= 0 Then cmup = Val(wsArt.Cells(i, 8).Value)
+            Dim value As Double: value = stock * cmup
             
             ' Find last movement date
             Dim lastMoveDate As Date: lastMoveDate = DateSerial(2020, 1, 1)
