@@ -307,8 +307,11 @@ Public Sub CompleteFirstRun(ByVal loadDemoData As Boolean)
 
     On Error Resume Next
     mod_Dashboard.RefreshDashboard
+    Debug.Print "[FirstRun] Dashboard refreshed"
     mod_AccueilButtons.RefreshAccueilKPIs
+    Debug.Print "[FirstRun] ACCUEIL KPIs refreshed"
     ThisWorkbook.Sheets(mod_Config.SHEET_ACCUEIL).Activate
+    Debug.Print "[FirstRun] ACCUEIL activated"
     On Error GoTo 0
 
     Application.ScreenUpdating = True

@@ -293,7 +293,10 @@ Public Sub RefreshAccueilKPIs()
     On Error GoTo ErrorHandler
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets("ACCUEIL")
-    If ws Is Nothing Then Exit Sub
+    If ws Is Nothing Then
+        Debug.Print "[KPI] ACCUEIL sheet not found"
+        Exit Sub
+    End If
     
     Dim wsA As Worksheet: Set wsA = ThisWorkbook.Sheets("ARTICLES")
     Dim wsS As Worksheet: Set wsS = ThisWorkbook.Sheets("FOURNISSEURS")
@@ -304,6 +307,7 @@ Public Sub RefreshAccueilKPIs()
     
     If Not wsA Is Nothing Then
         Dim lr As Long: lr = wsA.Cells(wsA.Rows.Count, 1).End(xlUp).Row
+        Debug.Print "[KPI] ARTICLES last row: " & lr
         If lr > 1 Then
             artCount = lr - 1
             Dim i As Long
@@ -314,23 +318,30 @@ Public Sub RefreshAccueilKPIs()
     End If
     If Not wsS Is Nothing Then
         Dim lrS As Long: lrS = wsS.Cells(wsS.Rows.Count, 1).End(xlUp).Row
+        Debug.Print "[KPI] FOURNISSEURS last row: " & lrS
         If lrS > 1 Then supCount = lrS - 1
     End If
+    
+    Debug.Print "[KPI] Counts: articles=" & artCount & " suppliers=" & supCount & " stock=" & stockVal
     
     Dim shp As Shape
     For Each shp In ws.Shapes
         If shp.Name = "kpiArticles" Then
             shp.TextFrame.Characters.Text = "Articles: " & artCount
+            Debug.Print "[KPI] Updated kpiArticles to " & artCount
         ElseIf shp.Name = "kpiSuppliers" Then
             shp.TextFrame.Characters.Text = "Fournisseurs: " & supCount
+            Debug.Print "[KPI] Updated kpiSuppliers to " & supCount
         ElseIf shp.Name = "kpiStockValue" Then
             shp.TextFrame.Characters.Text = "Valeur Stock: " & Format(stockVal, "#,##0") & " DZD"
+            Debug.Print "[KPI] Updated kpiStockValue to " & stockVal
         End If
     Next shp
     On Error GoTo 0
     Exit Sub
     
 ErrorHandler:
+    Debug.Print "[KPI] Error: " & Err.Number & " - " & Err.Description
     On Error Resume Next
     ws.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     On Error GoTo 0
