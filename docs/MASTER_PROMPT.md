@@ -11,18 +11,23 @@ You are HyperAgent, collaborating with Mahi Kamel Abdelghani on the Academix DSS
 
 ## Files Available for Analysis
 
-### In This Directory (`C:\Users\Admin\MAHI\hyperagent-context\`)
-| File | Purpose |
+### In This Repo (after cloning)
+| Path | Purpose |
 |------|---------|
-| `ACADEMIX_DSS_CONTEXT.md` | Full project context |
-| `ERP_dss_v13.4_hardware_store_with_demo_data.xhtml` | Full demo export (464KB) — all VBA code in structured HTML |
-| `ERP_dss_v13.4_hardware_store_without_demo_data.xhtml` | Clean version export (33KB) |
-| `test_academix/` | Working .xlsm + screenshots |
+| `docs/ACADEMIX_DSS_CONTEXT.md` | Full project context |
+| `docs/MASTER_PROMPT.md` | This file — system instructions |
+| `docs/ERP_dss_v13.4_hardware_store_with_demo_data.xhtml` | Full demo export (475KB) — all VBA code in structured HTML |
+| `docs/ERP_dss_v13.4_hardware_store_without_demo_data.xhtml` | Clean version export (33KB) |
+| `docs/TEST_REPORT_v14.md` | Full test results |
+| `docs/SELLABLE_PACKAGE.md` | Pricing, distribution, support |
+| `docs/USER_GUIDE.md` | 14-section FR/EN guide |
+| `docs/QUICK_START.md` | 30-second setup guide |
+| `modules/*.bas` | All 30 VBA modules |
+| `test_academix/ERP_dss_v13.4_hardware_store.xlsm` | Working .xlsm (611KB) |
 
-### Git Repos (clone or browse)
+### Second Repo (for comparison)
 | Repo | URL | What's There |
 |------|-----|--------------|
-| `academix-dss-hardware` | https://github.com/kamelmh/academix-dss-hardware | 30 modules, docs, tests, screenshots |
 | `logistics-public-sector-refactor` | https://github.com/kamelmh/logistics-public-sector-refactor | 74 modules (main dev) |
 
 ## Your Capabilities

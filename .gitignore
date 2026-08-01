@@ -4,8 +4,13 @@ Thumbs.db
 
 # Backups
 Academix_Backups/
+test_academix/Academix_Backups/
 
 # Temp
 *.tmp
 *.bak
 *~lock~
+~$*
+
+# Root .xhtml (kept in docs/ and test_academix/)
+/*.xhtml
