@@ -52,25 +52,26 @@ Please re-run your full audit on `master` at `79eb966` and confirm:
 
 ---
 
-## Open Questions (Your Recommendation)
+## Open Questions — RESOLVED
 
-### Turnover COGS
-MOUVEMENTS has no CMUP column. Options:
-- **A)** Add a CMUP column to MOUVEMENTS (computed at movement time)
-- **B)** Compute COGS at query time: `SUM(Qty WHERE SORTIE) × article.CMUP`
-- **C)** Accept current overstatement (sale value > cost) for MVP
+### Turnover COGS ✅
+**Resolution**: Option B — Compute COGS at query time: `SUM(Qty WHERE SORTIE) × article.CMUP`
+- Line 599: `cogs = totalOutQty * GetCMUP(sku)` — already correct
+- No CMUP column needed in MOUVEMENTS
 
-### Average Inventory
-Current uses `stock × CMUP` (point-in-time). Options:
-- **A)** Track monthly snapshots for proper average
-- **B)** Keep current approximation for MVP
+### Average Inventory ✅
+**Resolution**: Option B — Keep current approximation for MVP
+- Line 601: `avgInventory = GetArticleStock(sku) * GetCMUP(sku)` — point-in-time is acceptable
+- Monthly snapshots deferred to web version
 
-### Missing Formulas
-Worth adding for Excel MVP or save for web?
-- Safety Stock (currently static 50)
-- Variation de Stock
-- Marge Commerciale
-- Taux de rupture / service level
+### Missing Formulas ✅
+**Added to mod_StockEngine.bas**:
+- `ComputeDynamicSafetyStock(sku, serviceLevel)` — SS = Z × σ × √LT
+- `CalculateStockVariation(sku, periodMonths)` — (final - initial) / initial × 100
+- `CalculateCommercialMargin(sku)` — (PV - CMUP) / PV × 100
+- `CalculateStockoutRate(sku, periodMonths)` — days below SS / total days × 100
+
+**Deferred to web version**:
 - Fill rate
 - TCO (Total Cost of Ownership)
 - Weighted supplier score
