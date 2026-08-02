@@ -116,7 +116,8 @@ Public Property Get MASTER_PWD() As String
     End If
     
     ' Fallback: generate random password (Randomize ensures true randomness)
-    If Len(val) = 0 Or val = "CHANGEME" Then
+    ' Like catches every CHANGEME* leftover, not just the bare literal
+    If Len(val) = 0 Or val Like "CHANGEME*" Then
         Randomize
         val = "DSS_" & Format(Now, "YYMMDD") & "_" & Format(Int(Rnd * 9000) + 1000, "0000")
         ' Guard write — CONFIG may be protected
@@ -528,4 +529,73 @@ Public Sub ResetConfigToDefaults(Optional ByVal confirm As Boolean = True)
     SeedDefaultConfig
     MarkFirstRunPending
     Debug.Print "[Config] Configuration reset to defaults; FIRST_RUN re-armed"
+End Sub
+
+' ============================================================================
+' REPAIR OLD WORKBBOOKS - Migrate CHANGEME_* passwords in distributed copies
+' ============================================================================
+' For files where the code itself hasn't been repatched yet (already-distributed
+' customer copies). Bypasses MASTER_PWD/WriteConfig entirely to avoid the
+' circular Unprotect risk — works the CONFIG sheet directly.
+'
+' Usage: Run manually from VBA editor or wire to a Ribbon button.
+' Do NOT auto-run on Workbook_Open — it touches other open workbooks.
+' ============================================================================
+
+Public Sub RepairOldWorkbooks()
+    Dim wb As Workbook, ws As Worksheet, wsLog As Worksheet
+    Dim r As Variant, lr As Long
+    Dim oldVal As String, newVal As String, summary As String, logMsg As String
+    Dim repaired As Long, skipped As Long
+
+    For Each wb In Application.Workbooks
+        Set ws = Nothing
+        On Error Resume Next
+        Set ws = wb.Sheets("CONFIG")
+        On Error GoTo 0
+        If Not ws Is Nothing Then
+            r = Application.Match("MASTER_PWD", ws.Range("A:A"), 0)
+            If Not IsError(r) Then
+                oldVal = CStr(ws.Cells(r, 2).Value)
+                If oldVal Like "CHANGEME*" Then
+                    Randomize
+                    newVal = "DSS_" & Format(Now, "YYMMDD") & "_" & _
+                             Format(Int(Rnd * 9000) + 1000, "0000")
+
+                    On Error Resume Next
+                    ws.Unprotect Password:=oldVal   ' old literal IS the current sheet password
+                    ws.Cells(r, 2).Value = newVal
+                    ws.Cells(r, 3).Value = "Mot de passe maitre (repare le " & Format(Now, "YYYY-MM-DD") & ")"
+                    ws.Protect Password:=newVal, UserInterfaceOnly:=True
+                    On Error GoTo 0
+
+                    On Error Resume Next
+                    Set wsLog = wb.Sheets("AUDIT_LOG")
+                    If Not wsLog Is Nothing Then
+                        lr = wsLog.Cells(wsLog.Rows.Count, 1).End(xlUp).Row + 1
+                        wsLog.Cells(lr, 1).Value = Now
+                        wsLog.Cells(lr, 2).Value = "REPAIR"
+                        wsLog.Cells(lr, 3).Value = "MASTER_PWD migre depuis '" & oldVal & "'"
+                    End If
+                    Set wsLog = Nothing
+                    On Error GoTo 0
+
+                    repaired = repaired + 1
+                    logMsg = logMsg & "- " & wb.Name & " : " & oldVal & " -> " & newVal & vbCrLf
+                Else
+                    skipped = skipped + 1
+                End If
+            End If
+        End If
+    Next wb
+
+    If repaired = 0 Then
+        summary = "Aucun classeur ouvert ne necessite de reparation." & vbCrLf & _
+                  skipped & " classeur(s) deja a jour."
+    Else
+        summary = repaired & " classeur(s) repare(s) :" & vbCrLf & vbCrLf & logMsg & _
+                  vbCrLf & skipped & " classeur(s) deja a jour (ignore)."
+    End If
+    MsgBox summary, vbInformation, "Reparation MASTER_PWD"
+    Debug.Print "[RepairOldWorkbooks] " & repaired & " repaired, " & skipped & " already current"
 End Sub
