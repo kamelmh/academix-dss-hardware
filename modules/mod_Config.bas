@@ -7,6 +7,10 @@ Attribute VB_Name = "mod_Config"
 
 Option Explicit
 
+' Module-level cache - avoids 400+ sheet lookups per refresh cycle
+Private cachedPwd As String
+Private pwdCached As Boolean
+
 ' ============================================================================
 ' SHEET NAMES - Fixed for all deployments
 ' ============================================================================
@@ -96,10 +100,6 @@ Public Property Get DOC_TYPE_DA As String
     DOC_TYPE_DA = "Demande d'Achat"
 End Property
 
-' Module-level cache — avoids 400+ sheet lookups per refresh cycle
-Private cachedPwd As String
-Private pwdCached As Boolean
-
 Public Property Get MASTER_PWD() As String
     ' Return cached value if already loaded this session
     If pwdCached Then MASTER_PWD = cachedPwd: Exit Property
@@ -120,7 +120,7 @@ Public Property Get MASTER_PWD() As String
     If Len(val) = 0 Or val Like "CHANGEME*" Then
         Randomize
         val = "DSS_" & Format(Now, "YYMMDD") & "_" & Format(Int(Rnd * 9000) + 1000, "0000")
-        ' Guard write — CONFIG may be protected
+        ' Guard write - CONFIG may be protected
         On Error Resume Next
         If Not ws Is Nothing Then
             If Not IsError(r) Then
@@ -536,10 +536,10 @@ End Sub
 ' ============================================================================
 ' For files where the code itself hasn't been repatched yet (already-distributed
 ' customer copies). Bypasses MASTER_PWD/WriteConfig entirely to avoid the
-' circular Unprotect risk — works the CONFIG sheet directly.
+' circular Unprotect risk - works the CONFIG sheet directly.
 '
 ' Usage: Run manually from VBA editor or wire to a Ribbon button.
-' Do NOT auto-run on Workbook_Open — it touches other open workbooks.
+' Do NOT auto-run on Workbook_Open - it touches other open workbooks.
 ' ============================================================================
 
 Public Sub RepairOldWorkbooks()

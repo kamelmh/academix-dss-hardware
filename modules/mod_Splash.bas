@@ -81,9 +81,9 @@ Public Sub ShowProgress(ByVal current As Long, ByVal total As Long, Optional ByV
     Dim i As Long
     For i = 1 To 20
         If i <= (pct / 5) Then
-            bar = bar & Chr(9608)  ' █
+            bar = bar & Chr(9608)  ' [block]
         Else
-            bar = bar & Chr(9617)  ' ░
+            bar = bar & Chr(9617)  ' [light]
         End If
     Next i
     

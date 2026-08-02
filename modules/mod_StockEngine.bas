@@ -578,7 +578,7 @@ End Function
 ' ================================================================================
 ' FUNCTION: CalculateTurnoverRatio
 ' Formula: Turnover = COGS / Average Inventory
-' BTS Ref: Semester 3 — Rotation des stocks
+' BTS Ref: Semester 3 - Rotation des stocks
 ' ================================================================================
 Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
     On Error Resume Next
@@ -611,7 +611,7 @@ End Function
 ' ================================================================================
 ' FUNCTION: CalculateDSI
 ' Formula: DSI = (Average Inventory / COGS) x 365
-' BTS Ref: Semester 3 — Jours de stockage (Days Sales of Inventory)
+' BTS Ref: Semester 3 - Jours de stockage (Days Sales of Inventory)
 ' ================================================================================
 Public Function CalculateDSI(ByVal sku As String) As Double
     Dim turnover As Double: turnover = CalculateTurnoverRatio(sku)
@@ -625,7 +625,7 @@ End Function
 ' ================================================================================
 ' FUNCTION: CalculateStockCoverage
 ' Formula: Coverage = Current Stock / Average Daily Usage
-' BTS Ref: Semester 3 — Couverture de stock
+' BTS Ref: Semester 3 - Couverture de stock
 ' ================================================================================
 Public Function CalculateStockCoverage(ByVal sku As String) As Double
     Dim annualDemand As Double: annualDemand = GetAnnualDemandFromHistory(sku)
@@ -644,7 +644,7 @@ End Function
 ' ================================================================================
 ' FUNCTION: CalculatePriceVariance
 ' Formula: (Actual Price - Standard Price) x Actual Quantity
-' BTS Ref: Semester 3 — Analyse des ecarts (Budget Management)
+' BTS Ref: Semester 3 - Analyse des ecarts (Budget Management)
 ' ================================================================================
 Public Function CalculatePriceVariance(ByVal sku As String, _
                                        ByVal stdPrice As Double) As Double
@@ -656,7 +656,7 @@ End Function
 ' ================================================================================
 ' FUNCTION: CalculateQuantityVariance
 ' Formula: (Actual Quantity - Standard Quantity) x Standard Price
-' BTS Ref: Semester 3 — Analyse des ecarts (Budget Management)
+' BTS Ref: Semester 3 - Analyse des ecarts (Budget Management)
 ' ================================================================================
 Public Function CalculateQuantityVariance(ByVal sku As String, _
                                            ByVal stdQty As Double) As Double
@@ -726,11 +726,11 @@ End Function
 
 ' ================================================================================
 ' FUNCTION: ComputeDynamicSafetyStock
-' Formula: SS = Z × σ_LT × √LT
+' Formula: SS = Z x sigma_LT x sqrtLT
 ' Z = service level factor (1.65 for 95%, 1.28 for 90%)
-' σ_LT = standard deviation of demand during lead time
+' sigma_LT = standard deviation of demand during lead time
 ' LT = lead time in days
-' BTS Ref: Semester 3 — Stock de securite dynamique
+' BTS Ref: Semester 3 - Stock de securite dynamique
 ' ================================================================================
 Public Function ComputeDynamicSafetyStock(ByVal sku As String, _
                                          Optional ByVal serviceLevel As Double = 0.95) As Double
@@ -806,15 +806,15 @@ Public Function ComputeDynamicSafetyStock(ByVal sku As String, _
     variance = variance / (count - 1)
     Dim stdDev As Double: stdDev = Sqr(variance)
 
-    ' SS = Z × σ × √LT
+    ' SS = Z x sigma x sqrtLT
     ComputeDynamicSafetyStock = z * stdDev * Sqr(lt)
     On Error GoTo 0
 End Function
 
 ' ================================================================================
 ' FUNCTION: CalculateStockVariation
-' Formula: Variation = (Stock_final - Stock_initial) / Stock_initial × 100
-' BTS Ref: Semester 3 — Variation de stock
+' Formula: Variation = (Stock_final - Stock_initial) / Stock_initial x 100
+' BTS Ref: Semester 3 - Variation de stock
 ' ================================================================================
 Public Function CalculateStockVariation(ByVal sku As String, _
                                        Optional ByVal periodMonths As Integer = 1) As Double
@@ -848,7 +848,7 @@ Public Function CalculateStockVariation(ByVal sku As String, _
     Next i
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 
-    ' Variation = (final - initial) / initial × 100
+    ' Variation = (final - initial) / initial x 100
     If initialQty > 0 Then
         CalculateStockVariation = ((finalQty - initialQty) / initialQty) * 100
     Else
@@ -859,10 +859,10 @@ End Function
 
 ' ================================================================================
 ' FUNCTION: CalculateCommercialMargin
-' Formula: Marge = (PV_HT - PA_HT) / PV_HT × 100
+' Formula: Marge = (PV_HT - PA_HT) / PV_HT x 100
 ' PV_HT = selling price excluding TVA
 ' PA_HT = purchase price excluding TVA (CMUP)
-' BTS Ref: Semester 3 — Marge commerciale
+' BTS Ref: Semester 3 - Marge commerciale
 ' ================================================================================
 Public Function CalculateCommercialMargin(ByVal sku As String) As Double
     On Error Resume Next
@@ -889,9 +889,9 @@ End Function
 
 ' ================================================================================
 ' FUNCTION: CalculateStockoutRate
-' Formula: Taux_rupture = (Nb_jours_rupture / Nb_jours_total) × 100
+' Formula: Taux_rupture = (Nb_jours_rupture / Nb_jours_total) x 100
 ' Counts days where stock was at or below safety stock
-' BTS Ref: Semester 3 — Taux de rupture / service level
+' BTS Ref: Semester 3 - Taux de rupture / service level
 ' ================================================================================
 Public Function CalculateStockoutRate(ByVal sku As String, _
                                      Optional ByVal periodMonths As Integer = 3) As Double

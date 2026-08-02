@@ -1,6 +1,6 @@
 Attribute VB_Name = "mod_AuditTrail"
 ' ================================================================================
-' mod_AuditTrail — Lightweight audit trail stub
+' mod_AuditTrail - Lightweight audit trail stub
 ' ================================================================================
 Option Explicit
 

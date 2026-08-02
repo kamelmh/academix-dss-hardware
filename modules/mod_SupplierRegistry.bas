@@ -9,8 +9,8 @@ Attribute VB_Name = "mod_SupplierRegistry"
 
 '
 ' Tax IDs per Algerian DGI requirements:
-'   NIF  - Num�ro d'Identification Fiscale (15 digits)
-'   NIS  - Num�ro d'Identification Statistique (13 digits)
+'   NIF  - Num?ro d'Identification Fiscale (15 digits)
+'   NIS  - Num?ro d'Identification Statistique (13 digits)
 '   RC   - Registre de Commerce (Alger/Oran/Alger)
 '   Art. - Article d'imposition (code fiscal)
 '==============================================================================
@@ -26,8 +26,8 @@ Public Type SupplierInfo
     Name            As String       ' Full legal name
     Address         As String       ' Physical address
     Phone           As String       ' Contact phone
-    NIF             As String       ' Num�ro d'Identification Fiscale (15 digits)
-    NIS             As String       ' Num�ro d'Identification Statistique (13 digits)
+    NIF             As String       ' Num?ro d'Identification Fiscale (15 digits)
+    NIS             As String       ' Num?ro d'Identification Statistique (13 digits)
     RC              As String       ' Registre de Commerce
     ArticleImpot    As String       ' Article d'imposition (fiscal code)
     Category        As String       ' Fourniture, Papeterie, etc.
@@ -47,13 +47,13 @@ Public Function GetSupplierInfo(ByVal supplierCode As String) As SupplierInfo
         Case "F-001"
             s.Code = "F-001"
             s.Name = "ENAP Alger - Entreprise Nationale des Arts Plastiques"
-            s.Address = "Rue des Fr�res Abdeslam, Bab Ezzouar, Alger 16000"
+            s.Address = "Rue des Fr?res Abdeslam, Bab Ezzouar, Alger 16000"
             s.Phone = "023 00 00 01"
             s.NIF = "000116010002500"
             s.NIS = "0161600100250"
             s.RC = "16/00-0012345B67"
             s.ArticleImpot = "250"
-            s.Category = "Fournitures p�dagogiques"
+            s.Category = "Fournitures p?dagogiques"
             s.IsActive = True
             s.Rating = 4.2
             
@@ -72,7 +72,7 @@ Public Function GetSupplierInfo(ByVal supplierCode As String) As SupplierInfo
             
         Case "F-003"
             s.Code = "F-003"
-            s.Name = "Bureau Plus SPA - Cha�ne nationale"
+            s.Name = "Bureau Plus SPA - Cha?ne nationale"
             s.Address = "Chemin Mackley, Hydra, Alger 16035"
             s.Phone = "021 60 00 03"
             s.NIF = "000416010004500"
