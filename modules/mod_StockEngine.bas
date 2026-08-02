@@ -723,3 +723,254 @@ Private Function GetTotalPurchasedQty(ByVal sku As String) As Double
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     On Error GoTo 0
 End Function
+
+' ================================================================================
+' FUNCTION: ComputeDynamicSafetyStock
+' Formula: SS = Z × σ_LT × √LT
+' Z = service level factor (1.65 for 95%, 1.28 for 90%)
+' σ_LT = standard deviation of demand during lead time
+' LT = lead time in days
+' BTS Ref: Semester 3 — Stock de securite dynamique
+' ================================================================================
+Public Function ComputeDynamicSafetyStock(ByVal sku As String, _
+                                         Optional ByVal serviceLevel As Double = 0.95) As Double
+    On Error Resume Next
+    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then ComputeDynamicSafetyStock = GetSafetyStock(sku): Exit Function
+
+    Dim lt As Integer: lt = GetLeadTime()
+    If lt <= 0 Then lt = 2
+
+    ' Z-score for service level (95% = 1.65, 90% = 1.28)
+    Dim z As Double
+    If serviceLevel >= 0.95 Then
+        z = 1.65
+    ElseIf serviceLevel >= 0.9 Then
+        z = 1.28
+    Else
+        z = 1.0
+    End If
+
+    ' Calculate standard deviation of daily demand from recent history
+    Dim currentYear As Integer: currentYear = Year(Date)
+    Dim demandValues() As Double
+    Dim count As Long: count = 0
+
+    ' Count sortie movements for this article
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim i As Long
+    For i = 2 To lastRow
+        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            If CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
+                If Year(CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)) = currentYear Then
+                    count = count + 1
+                End If
+            End If
+        End If
+    Next i
+
+    ' Need at least 2 data points for standard deviation
+    If count < 2 Then
+        wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+        ComputeDynamicSafetyStock = GetSafetyStock(sku)
+        Exit Function
+    End If
+
+    ' Collect demand values
+    ReDim demandValues(1 To count)
+    Dim idx As Long: idx = 0
+    For i = 2 To lastRow
+        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            If CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
+                If Year(CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)) = currentYear Then
+                    idx = idx + 1
+                    demandValues(idx) = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+                End If
+            End If
+        End If
+    Next i
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+
+    ' Calculate mean and standard deviation
+    Dim mean As Double: mean = 0
+    For i = 1 To count
+        mean = mean + demandValues(i)
+    Next i
+    mean = mean / count
+
+    Dim variance As Double: variance = 0
+    For i = 1 To count
+        variance = variance + (demandValues(i) - mean) ^ 2
+    Next i
+    variance = variance / (count - 1)
+    Dim stdDev As Double: stdDev = Sqr(variance)
+
+    ' SS = Z × σ × √LT
+    ComputeDynamicSafetyStock = z * stdDev * Sqr(lt)
+    On Error GoTo 0
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateStockVariation
+' Formula: Variation = (Stock_final - Stock_initial) / Stock_initial × 100
+' BTS Ref: Semester 3 — Variation de stock
+' ================================================================================
+Public Function CalculateStockVariation(ByVal sku As String, _
+                                       Optional ByVal periodMonths As Integer = 1) As Double
+    On Error Resume Next
+    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then CalculateStockVariation = 0: Exit Function
+
+    Dim cutoffDate As Date: cutoffDate = DateAdd("m", -periodMonths, Date)
+    Dim initialQty As Double: initialQty = 0
+    Dim finalQty As Double: finalQty = 0
+
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim i As Long
+    For i = 2 To lastRow
+        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)
+            Dim mType As String: mType = CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value)
+            Dim mQty As Double: mQty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+
+            If mDate < cutoffDate Then
+                ' Period start: IN adds, SORTIE subtracts
+                If mType = "IN" Then initialQty = initialQty + mQty
+                If mType = "SORTIE" Then initialQty = initialQty - mQty
+            Else
+                ' Period end: same logic
+                If mType = "IN" Then finalQty = finalQty + mQty
+                If mType = "SORTIE" Then finalQty = finalQty - mQty
+            End If
+        End If
+    Next i
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+
+    ' Variation = (final - initial) / initial × 100
+    If initialQty > 0 Then
+        CalculateStockVariation = ((finalQty - initialQty) / initialQty) * 100
+    Else
+        CalculateStockVariation = 0
+    End If
+    On Error GoTo 0
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateCommercialMargin
+' Formula: Marge = (PV_HT - PA_HT) / PV_HT × 100
+' PV_HT = selling price excluding TVA
+' PA_HT = purchase price excluding TVA (CMUP)
+' BTS Ref: Semester 3 — Marge commerciale
+' ================================================================================
+Public Function CalculateCommercialMargin(ByVal sku As String) As Double
+    On Error Resume Next
+    Dim wsArt As Worksheet: Set wsArt = ThisWorkbook.Sheets(mod_Config.SHEET_ARTICLES)
+    If wsArt Is Nothing Then CalculateCommercialMargin = 0: Exit Function
+
+    Dim foundRow As Variant
+    foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
+    If IsError(foundRow) Then CalculateCommercialMargin = 0: Exit Function
+
+    Dim pu As Double: pu = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+    Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, COL_ART_CMUP).Value)
+    If cmup <= 0 Then cmup = pu
+
+    ' PU is selling price (TTC or HT depending on config)
+    ' CMUP is cost price
+    If pu > 0 Then
+        CalculateCommercialMargin = ((pu - cmup) / pu) * 100
+    Else
+        CalculateCommercialMargin = 0
+    End If
+    On Error GoTo 0
+End Function
+
+' ================================================================================
+' FUNCTION: CalculateStockoutRate
+' Formula: Taux_rupture = (Nb_jours_rupture / Nb_jours_total) × 100
+' Counts days where stock was at or below safety stock
+' BTS Ref: Semester 3 — Taux de rupture / service level
+' ================================================================================
+Public Function CalculateStockoutRate(ByVal sku As String, _
+                                     Optional ByVal periodMonths As Integer = 3) As Double
+    On Error Resume Next
+    Dim wsMouv As Worksheet: Set wsMouv = ThisWorkbook.Sheets(mod_Config.SHEET_MOUVEMENTS)
+    If wsMouv Is Nothing Then CalculateStockoutRate = 0: Exit Function
+
+    Dim ss As Double: ss = GetSafetyStock(sku)
+    Dim cutoffDate As Date: cutoffDate = DateAdd("m", -periodMonths, Date)
+    Dim totalDays As Long: totalDays = 0
+    Dim stockoutDays As Long: stockoutDays = 0
+    Dim dailyStock As Double: dailyStock = 0
+
+    wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim i As Long
+
+    ' Build daily stock movement map
+    Dim stockMap As Object: Set stockMap = CreateObject("Scripting.Dictionary")
+    For i = 2 To lastRow
+        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)
+            If mDate >= cutoffDate Then
+                Dim mType As String: mType = CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value)
+                Dim mQty As Double: mQty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+                Dim dateKey As String: dateKey = Format(mDate, "YYYY-MM-DD")
+
+                If stockMap.Exists(dateKey) Then
+                    If mType = "IN" Then
+                        stockMap(dateKey) = stockMap(dateKey) + mQty
+                    ElseIf mType = "SORTIE" Then
+                        stockMap(dateKey) = stockMap(dateKey) - mQty
+                    End If
+                Else
+                    If mType = "IN" Then
+                        stockMap.Add dateKey, mQty
+                    ElseIf mType = "SORTIE" Then
+                        stockMap.Add dateKey, -mQty
+                    End If
+                End If
+            End If
+        End If
+    Next i
+    wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
+
+    ' Get current stock as starting point
+    dailyStock = GetArticleStock(sku)
+
+    ' Walk through dates in order
+    Dim keys() As String: keys = stockMap.keys
+    Dim sortedKeys() As String
+    ' Simple sort (bubble sort for small datasets)
+    ReDim sortedKeys(LBound(keys) To UBound(keys))
+    For i = LBound(keys) To UBound(keys)
+        sortedKeys(i) = keys(i)
+    Next i
+    Dim j As Long, temp As String
+    For i = LBound(sortedKeys) To UBound(sortedKeys)
+        For j = i + 1 To UBound(sortedKeys)
+            If sortedKeys(i) > sortedKeys(j) Then
+                temp = sortedKeys(i)
+                sortedKeys(i) = sortedKeys(j)
+                sortedKeys(j) = temp
+            End If
+        Next j
+    Next i
+
+    ' Count days
+    For i = LBound(sortedKeys) To UBound(sortedKeys)
+        totalDays = totalDays + 1
+        dailyStock = dailyStock + stockMap(sortedKeys(i))
+        If dailyStock <= ss Then stockoutDays = stockoutDays + 1
+    Next i
+
+    ' Calculate rate
+    If totalDays > 0 Then
+        CalculateStockoutRate = (stockoutDays / totalDays) * 100
+    Else
+        CalculateStockoutRate = 0
+    End If
+    On Error GoTo 0
+End Function
