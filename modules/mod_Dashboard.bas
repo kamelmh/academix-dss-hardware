@@ -54,19 +54,19 @@ Private Sub UpdateKPIs(ws As Worksheet)
     Dim countAlert As Long
     Dim totalValue As Double
     
-    totalSKUs = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row - 1
+    totalSKUs = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row - 1
     If totalSKUs < 0 Then totalSKUs = 0
     
     Dim i As Long
     On Error Resume Next
     For i = 2 To totalSKUs + 1
-        Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
-        Dim cmup As Double: cmup = Val(wsArt.Cells(i, COL_ART_CMUP).Value)
-        If cmup <= 0 Then cmup = Val(wsArt.Cells(i, COL_ART_PU).Value)
+        Dim stock As Double: stock = Val(wsArt.Cells(i, mod_Config.COL_ART_STOCK).Value)
+        Dim cmup As Double: cmup = Val(wsArt.Cells(i, mod_Config.COL_ART_CMUP).Value)
+        If cmup <= 0 Then cmup = Val(wsArt.Cells(i, mod_Config.COL_ART_PU).Value)
         
         totalValue = totalValue + (stock * cmup)
         
-        Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
+        Dim sku As String: sku = Trim(wsArt.Cells(i, mod_Config.COL_ART_CODE).Value)
         Dim ss As Double: ss = mod_StockEngine.GetSafetyStock(sku)
         Dim annualDemand As Double: annualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
         Dim rop As Double: rop = mod_StockEngine.ComputeROP(annualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
@@ -128,15 +128,15 @@ Private Sub UpdateCriticalTable(ws As Worksheet)
     On Error GoTo 0
     If wsArt Is Nothing Then Exit Sub
     
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row
     
     Dim criticalList(1 To 1000, 1 To 4) As Variant
     Dim countCrit As Integer: countCrit = 0
     
     Dim i As Long
     For i = 2 To lastRow
-        Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
-        Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
+        Dim sku As String: sku = Trim(wsArt.Cells(i, mod_Config.COL_ART_CODE).Value)
+        Dim stock As Double: stock = Val(wsArt.Cells(i, mod_Config.COL_ART_STOCK).Value)
         
         Dim annualDemand As Double: annualDemand = mod_StockEngine.GetAnnualDemandFromHistory(sku)
         Dim rop As Double: rop = mod_StockEngine.ComputeROP(annualDemand / mod_Config.WORKING_DAYS_PER_YEAR, sku)
@@ -146,7 +146,7 @@ Private Sub UpdateCriticalTable(ws As Worksheet)
             If countCrit > 1000 Then Exit For
             
             criticalList(countCrit, 1) = sku
-            criticalList(countCrit, 2) = wsArt.Cells(i, COL_ART_DESIGNATION).Value
+            criticalList(countCrit, 2) = wsArt.Cells(i, mod_Config.COL_ART_DESIGNATION).Value
             criticalList(countCrit, 3) = stock
             criticalList(countCrit, 4) = IIf(stock <= 0, "RUPTURE", "ALERTE")
         End If
@@ -190,7 +190,7 @@ Private Sub UpdateABCXYZSummary(ws As Worksheet)
     On Error GoTo 0
     If wsArt Is Nothing Then Exit Sub
     
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row
     
     Dim classes As Variant: classes = Array("A", "B", "C")
     Dim rowNum As Integer: rowNum = 3
@@ -202,7 +202,7 @@ Private Sub UpdateABCXYZSummary(ws As Worksheet)
         
         Dim i As Long
         For i = 2 To lastRow
-            If wsArt.Cells(i, COL_ART_CLASSE_ABC).Value = cls Then
+            If wsArt.Cells(i, mod_Config.COL_ART_CLASSE_ABC).Value = cls Then
                 countCls = countCls + 1
             End If
         Next i
@@ -230,15 +230,15 @@ Private Sub UpdateProjection(ws As Worksheet)
     On Error GoTo 0
     If wsMouv Is Nothing Or wsArt Is Nothing Then Exit Sub
     
-    Dim lastMouv As Long: lastMouv = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
-    Dim lastArt As Long: lastArt = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    Dim lastMouv As Long: lastMouv = wsMouv.Cells(wsMouv.Rows.Count, mod_Config.COL_MOUV_DATE).End(xlUp).Row
+    Dim lastArt As Long: lastArt = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row
     Dim i As Long
     
     Dim dict As Object: Set dict = CreateObject("Scripting.Dictionary")
     For i = 2 To lastMouv
-        If Trim(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
-            Dim artCode As String: artCode = Trim(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value)
-            Dim qty As Double: qty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+        If Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value) = "SORTIE" Then
+            Dim artCode As String: artCode = Trim(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value)
+            Dim qty As Double: qty = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
             If dict.Exists(artCode) Then
                 dict(artCode) = CDbl(dict(artCode)) + qty
             Else
@@ -270,9 +270,9 @@ Private Sub UpdateProjection(ws As Worksheet)
 
     Dim rowNum As Long: rowNum = 3
     For i = 2 To lastArt
-        artCode = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
+        artCode = Trim(wsArt.Cells(i, mod_Config.COL_ART_CODE).Value)
         If artCode <> "" Then
-            Dim stock As Double: stock = Val(wsArt.Cells(i, COL_ART_STOCK).Value)
+            Dim stock As Double: stock = Val(wsArt.Cells(i, mod_Config.COL_ART_STOCK).Value)
             Dim totalOut As Double
             If dict.Exists(artCode) Then totalOut = CDbl(dict(artCode)) Else totalOut = 0
             

@@ -75,6 +75,12 @@ Public Const COL_FOU_NIF As Long = 5
 Public Const COL_FOU_NIS As Long = 6
 Public Const COL_FOU_RC As Long = 7
 Public Const COL_FOU_ARTICLE_IMPOSITION As Long = 8
+Public Const COL_FOU_NOM_ABREGE As Long = 9
+Public Const COL_FOU_WILAYA As Long = 10
+Public Const COL_FOU_CLASSE As Long = 11
+Public Const COL_FOU_DELAI As Long = 12
+Public Const COL_FOU_NOTE As Long = 13
+Public Const COL_FOU_SPECIALITE As Long = 14
 
 ' ============================================================================
 ' SYSTEM PROPERTIES

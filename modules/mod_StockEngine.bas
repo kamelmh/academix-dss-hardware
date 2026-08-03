@@ -49,7 +49,7 @@ Public Function GetSafetyStock(ByVal sku As String) As Double
     If IsError(foundRow) Then
         GetSafetyStock = 50
     Else
-        Dim ss As Double: ss = Val(wsArt.Cells(foundRow, COL_ART_STOCK_SECURITE).Value)
+        Dim ss As Double: ss = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK_SECURITE).Value)
         If ss > 0 Then GetSafetyStock = ss Else GetSafetyStock = 50
     End If
 End Function
@@ -138,7 +138,7 @@ Public Function GetArticleStock(ByVal sku As String) As Double
     If IsError(foundRow) Then
         GetArticleStock = 0
     Else
-        GetArticleStock = Val(wsArt.Cells(foundRow, COL_ART_STOCK).Value)
+        GetArticleStock = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK).Value)
     End If
 End Function
 
@@ -160,12 +160,12 @@ Public Sub UpdateArticleStockBalance(ByVal artCode As String, ByVal mvtSign As S
     foundRow = Application.Match(artCode, wsArt.Range("A:A"), 0)
     
     If Not IsError(foundRow) Then
-        Dim currentQty As Double: currentQty = Val(wsArt.Cells(foundRow, COL_ART_STOCK).Value)
+        Dim currentQty As Double: currentQty = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK).Value)
         
         If mvtSign = "IN" Then
-            wsArt.Cells(foundRow, COL_ART_STOCK).Value = currentQty + qty
+            wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK).Value = currentQty + qty
         Else
-            wsArt.Cells(foundRow, COL_ART_STOCK).Value = currentQty - qty
+            wsArt.Cells(foundRow, mod_Config.COL_ART_STOCK).Value = currentQty - qty
         End If
     End If
     
@@ -413,14 +413,14 @@ Public Sub RefreshAllCMUP()
     Set wsArt = mod_ErrorHandler.SafeOpenSheet(mod_Config.SHEET_ARTICLES)
     If wsArt Is Nothing Then GoTo Cleanup
     
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row
     
     Dim i As Long, cmup As Double
     For i = 2 To lastRow
-        Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
+        Dim sku As String: sku = Trim(wsArt.Cells(i, mod_Config.COL_ART_CODE).Value)
         If sku <> "" Then
             cmup = CalculateCMUP(sku)
-            If cmup > 0 Then wsArt.Cells(i, COL_ART_CMUP).Value = cmup
+            If cmup > 0 Then wsArt.Cells(i, mod_Config.COL_ART_CMUP).Value = cmup
         End If
     Next i
     
@@ -459,7 +459,7 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
     Set wsArt = mod_ErrorHandler.SafeOpenSheet(mod_Config.SHEET_ARTICLES)
     If wsArt Is Nothing Then GoTo Cleanup
     
-    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, COL_ART_CODE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsArt.Cells(wsArt.Rows.Count, mod_Config.COL_ART_CODE).End(xlUp).Row
     If lastRow < 2 Then GoTo Cleanup
 
     Dim i As Long
@@ -468,10 +468,10 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
     Dim articleCodes() As String: ReDim articleCodes(2 To lastRow)
 
     For i = 2 To lastRow
-        Dim sku As String: sku = Trim(wsArt.Cells(i, COL_ART_CODE).Value)
+        Dim sku As String: sku = Trim(wsArt.Cells(i, mod_Config.COL_ART_CODE).Value)
         If sku <> "" Then
             Dim AnnualDemand As Double: AnnualDemand = GetAnnualDemandFromHistory(sku)
-            Dim pu As Double: pu = Val(wsArt.Cells(i, COL_ART_PU).Value)
+            Dim pu As Double: pu = Val(wsArt.Cells(i, mod_Config.COL_ART_PU).Value)
             articleValues(i) = AnnualDemand * pu
             articleCodes(i) = sku
             totalValue = totalValue + articleValues(i)
@@ -507,7 +507,7 @@ Public Sub UpdateAllABCClassifications(Optional ByVal silent As Boolean = False)
         Dim foundRow As Variant
         foundRow = Application.Match(articleCodes(i), wsArt.Range("A:A"), 0)
         If Not IsError(foundRow) Then
-            wsArt.Cells(foundRow, COL_ART_CLASSE_ABC).Value = abcClass
+            wsArt.Cells(foundRow, mod_Config.COL_ART_CLASSE_ABC).Value = abcClass
         End If
     Next i
 
@@ -546,7 +546,7 @@ Public Function GetOrderRecommendation(ByVal sku As String) As Double
     foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
     If IsError(foundRow) Then GetOrderRecommendation = 0: Exit Function
     
-    pu = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+    pu = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
     GetOrderRecommendation = ComputeEOQ(annualDemand, pu)
 End Function
 
@@ -590,10 +590,10 @@ Public Function CalculateTurnoverRatio(ByVal sku As String) As Double
 
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
     totalOutQty = WorksheetFunction.SumIfs( _
-        wsMouv.Columns(COL_MOUV_QTE), _
-        wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
-        wsMouv.Columns(COL_MOUV_TYPE), "SORTIE", _
-        wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
+        wsMouv.Columns(mod_Config.COL_MOUV_QTE), _
+        wsMouv.Columns(mod_Config.COL_MOUV_CODE_ARTICLE), sku, _
+        wsMouv.Columns(mod_Config.COL_MOUV_TYPE), "SORTIE", _
+        wsMouv.Columns(mod_Config.COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
 
     Dim cogs As Double: cogs = totalOutQty * GetCMUP(sku)
@@ -680,7 +680,7 @@ Private Function GetUnitPrice(ByVal sku As String) As Double
     If IsError(foundRow) Then
         GetUnitPrice = 0
     Else
-        GetUnitPrice = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+        GetUnitPrice = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
     End If
 End Function
 
@@ -699,8 +699,8 @@ Private Function GetCMUP(ByVal sku As String) As Double
     If IsError(foundRow) Then
         GetCMUP = 0
     Else
-        Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, COL_ART_CMUP).Value)
-        If cmup <= 0 Then cmup = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
+        Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_CMUP).Value)
+        If cmup <= 0 Then cmup = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
         GetCMUP = cmup
     End If
 End Function
@@ -716,10 +716,10 @@ Private Function GetTotalPurchasedQty(ByVal sku As String) As Double
     Dim currentYear As Integer: currentYear = Year(Date)
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
     GetTotalPurchasedQty = WorksheetFunction.SumIfs( _
-        wsMouv.Columns(COL_MOUV_QTE), _
-        wsMouv.Columns(COL_MOUV_CODE_ARTICLE), sku, _
-        wsMouv.Columns(COL_MOUV_TYPE), "IN", _
-        wsMouv.Columns(COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
+        wsMouv.Columns(mod_Config.COL_MOUV_QTE), _
+        wsMouv.Columns(mod_Config.COL_MOUV_CODE_ARTICLE), sku, _
+        wsMouv.Columns(mod_Config.COL_MOUV_TYPE), "IN", _
+        wsMouv.Columns(mod_Config.COL_MOUV_DATE), ">=" & DateSerial(currentYear, 1, 1))
     wsMouv.Protect Password:=mod_Config.MASTER_PWD, UserInterfaceOnly:=True
     On Error GoTo 0
 End Function
@@ -758,12 +758,12 @@ Public Function ComputeDynamicSafetyStock(ByVal sku As String, _
 
     ' Count sortie movements for this article
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
-    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, mod_Config.COL_MOUV_DATE).End(xlUp).Row
     Dim i As Long
     For i = 2 To lastRow
-        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
-            If CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
-                If Year(CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)) = currentYear Then
+        If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value) = "SORTIE" Then
+                If Year(CDate(wsMouv.Cells(i, mod_Config.COL_MOUV_DATE).Value)) = currentYear Then
                     count = count + 1
                 End If
             End If
@@ -781,11 +781,11 @@ Public Function ComputeDynamicSafetyStock(ByVal sku As String, _
     ReDim demandValues(1 To count)
     Dim idx As Long: idx = 0
     For i = 2 To lastRow
-        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
-            If CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value) = "SORTIE" Then
-                If Year(CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)) = currentYear Then
+        If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value) = "SORTIE" Then
+                If Year(CDate(wsMouv.Cells(i, mod_Config.COL_MOUV_DATE).Value)) = currentYear Then
                     idx = idx + 1
-                    demandValues(idx) = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+                    demandValues(idx) = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
                 End If
             End If
         End If
@@ -827,13 +827,13 @@ Public Function CalculateStockVariation(ByVal sku As String, _
     Dim finalQty As Double: finalQty = 0
 
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
-    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, mod_Config.COL_MOUV_DATE).End(xlUp).Row
     Dim i As Long
     For i = 2 To lastRow
-        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
-            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)
-            Dim mType As String: mType = CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value)
-            Dim mQty As Double: mQty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+        If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, mod_Config.COL_MOUV_DATE).Value)
+            Dim mType As String: mType = CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value)
+            Dim mQty As Double: mQty = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
 
             If mDate < cutoffDate Then
                 ' Period start: IN adds, SORTIE subtracts
@@ -873,8 +873,8 @@ Public Function CalculateCommercialMargin(ByVal sku As String) As Double
     foundRow = Application.Match(sku, wsArt.Range("A:A"), 0)
     If IsError(foundRow) Then CalculateCommercialMargin = 0: Exit Function
 
-    Dim pu As Double: pu = Val(wsArt.Cells(foundRow, COL_ART_PU).Value)
-    Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, COL_ART_CMUP).Value)
+    Dim pu As Double: pu = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_PU).Value)
+    Dim cmup As Double: cmup = Val(wsArt.Cells(foundRow, mod_Config.COL_ART_CMUP).Value)
     If cmup <= 0 Then cmup = pu
 
     ' PU is selling price (TTC or HT depending on config)
@@ -906,17 +906,17 @@ Public Function CalculateStockoutRate(ByVal sku As String, _
     Dim dailyStock As Double: dailyStock = 0
 
     wsMouv.Unprotect Password:=mod_Config.MASTER_PWD
-    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, COL_MOUV_DATE).End(xlUp).Row
+    Dim lastRow As Long: lastRow = wsMouv.Cells(wsMouv.Rows.Count, mod_Config.COL_MOUV_DATE).End(xlUp).Row
     Dim i As Long
 
     ' Build daily stock movement map
     Dim stockMap As Object: Set stockMap = CreateObject("Scripting.Dictionary")
     For i = 2 To lastRow
-        If CStr(wsMouv.Cells(i, COL_MOUV_CODE_ARTICLE).Value) = sku Then
-            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, COL_MOUV_DATE).Value)
+        If CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_CODE_ARTICLE).Value) = sku Then
+            Dim mDate As Date: mDate = CDate(wsMouv.Cells(i, mod_Config.COL_MOUV_DATE).Value)
             If mDate >= cutoffDate Then
-                Dim mType As String: mType = CStr(wsMouv.Cells(i, COL_MOUV_TYPE).Value)
-                Dim mQty As Double: mQty = Val(wsMouv.Cells(i, COL_MOUV_QTE).Value)
+                Dim mType As String: mType = CStr(wsMouv.Cells(i, mod_Config.COL_MOUV_TYPE).Value)
+                Dim mQty As Double: mQty = Val(wsMouv.Cells(i, mod_Config.COL_MOUV_QTE).Value)
                 Dim dateKey As String: dateKey = Format(mDate, "YYYY-MM-DD")
 
                 If stockMap.Exists(dateKey) Then

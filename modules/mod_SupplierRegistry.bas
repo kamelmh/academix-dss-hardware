@@ -227,15 +227,15 @@ Public Sub SetupFournisseursSheet()
         Dim dataRow As Long
         dataRow = r + 3
         
-        ws.Cells(dataRow, COL_FOU_CODE).Value = sInfo.Code
-        ws.Cells(dataRow, COL_FOU_NOM_ABREGE).Value = sInfo.Name
-        ws.Cells(dataRow, COL_FOU_RAISON_SOCIALE).Value = sInfo.Address
-        ws.Cells(dataRow, COL_FOU_WILAYA).Value = "Alger"
-        ws.Cells(dataRow, COL_FOU_TELEPHONE).Value = sInfo.Phone
-        ws.Cells(dataRow, COL_FOU_CLASSE).Value = "A"
-        ws.Cells(dataRow, COL_FOU_DELAI).Value = 5
-        ws.Cells(dataRow, COL_FOU_NOTE).Value = 90
-        ws.Cells(dataRow, COL_FOU_SPECIALITE).Value = sInfo.Category
+        ws.Cells(dataRow, mod_Config.COL_FOU_CODE).Value = sInfo.Code
+        ws.Cells(dataRow, mod_Config.COL_FOU_NOM_ABREGE).Value = sInfo.Name
+        ws.Cells(dataRow, mod_Config.COL_FOU_RAISON_SOCIALE).Value = sInfo.Address
+        ws.Cells(dataRow, mod_Config.COL_FOU_WILAYA).Value = "Alger"
+        ws.Cells(dataRow, mod_Config.COL_FOU_TELEPHONE).Value = sInfo.Phone
+        ws.Cells(dataRow, mod_Config.COL_FOU_CLASSE).Value = "A"
+        ws.Cells(dataRow, mod_Config.COL_FOU_DELAI).Value = 5
+        ws.Cells(dataRow, mod_Config.COL_FOU_NOTE).Value = 90
+        ws.Cells(dataRow, mod_Config.COL_FOU_SPECIALITE).Value = sInfo.Category
         
         ' Formatting
         Dim c As Integer

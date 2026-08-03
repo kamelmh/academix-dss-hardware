@@ -185,7 +185,7 @@ Public Sub GenerateStockAgingReport()
             report = report & artCode & vbTab & _
                      Left(wsArt.Cells(i, 2).Value, 18) & vbTab & _
                      Format(stock, "#,##0") & vbTab & _
-                     Format(pu, "#,##0") & vbTab & _
+                     Format(cmup, "#,##0") & vbTab & _
                      Format(value, "#,##0") & vbTab & _
                      Format(lastMoveDate, "DD/MM/YYYY") & vbTab & _
                      daysSinceMove & " (" & agingCategory & ")" & vbCrLf

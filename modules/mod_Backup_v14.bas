@@ -286,8 +286,8 @@ Public Sub RestoreBackup()
     End If
     
     ' Show file dialog
-    Dim fd As FileDialog
-    Set fd = Application.FileDialog(msoFileDialogFilePicker)
+    Dim fd As Object
+    Set fd = Application.FileDialog(3) ' msoFileDialogFilePicker = 3
     
     With fd
         .Title = "Select Backup to Restore"
