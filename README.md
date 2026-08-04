@@ -1,56 +1,186 @@
-# Academix DSS — Hardware Store
+# Academix DSS — Hardware Store Edition
 
-VBA inventory management system for Quincaillerie El Bayadh (hardware store).
+> **Le premier système de gestion de stock** spécialement conçu pour les quincailleries en Algérie.
 
-## Domain
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Excel: 2016+](https://img.shields.io/badge/Excel-2016%2B-blue.svg)](https://www.microsoft.com/excel)
+[![VBA: Built-in](https://img.shields.io/badge/VBA-Built--in-green.svg)](https://docs.microsoft.com/office/vba/api/overview/)
 
-Hardware store — fer/acier, ciment, plomberie, electricite, outillage, peinture, carrelage.
+---
 
-## Modules
+## Features
 
-### Shared (6) — canonical copies
-`mod_Dashboard` (12.7 KB), `mod_DemoData` (38.3 KB), `mod_StockEngine` (22.6 KB), `mod_SupplierRegistry` (13.6 KB), `mod_Barcode` (10.4 KB), `mod_Reports` (13.9 KB)
+| Feature | Description |
+|---------|-------------|
+| **Real-Time Dashboard** | Track stocks, alerts, and performance instantly |
+| **Smart Alerts** | Automatic warnings before stockouts |
+| **ABC Classification** | Identify your most valuable items |
+| **CMUP Calculation** | Weighted average cost (SCF compliant) |
+| **Wilson EOQ** | Economic Order Quantity optimization |
+| **Invoice Generation** | Create and print professional invoices |
+| **Barcode Printing** | Generate barcodes for articles |
+| **Supplier Management** | Track suppliers with NIF/NIS/RC tax IDs |
+| **Backup System** | Automatic backups on every open |
+| **Bilingual UI** | French and Arabic interface |
 
-### Hardware-Specific (21)
-| Module | Purpose |
-|--------|---------|
-| `MAIN_MACROS_CLEAN.bas` | Entry point — macro runner |
-| `mod_AccueilButtons_v14.bas` | Home page buttons |
-| `mod_AccueilDesign_v14.bas` | Home page design |
-| `mod_Backup_v14.bas` | Backup/restore |
-| `mod_BuildArticleEditor_v14.bas` | Article editor form |
-| `mod_BuildConfig_v14.bas` | Config form builder |
-| `mod_BuildDashboard_v14.bas` | Dashboard form builder |
-| `mod_BuildForm_v14.bas` | Generic form builder |
-| `mod_BuildReception_v14.bas` | Reception form builder |
-| `mod_BuildReports_v14.bas` | Reports form builder |
-| `mod_BuildSearch_v14.bas` | Search form builder |
-| `mod_BuildSupplierEditor_v14.bas` | Supplier editor form |
-| `mod_Cleanup.bas` | Cleanup utilities |
-| `mod_ErrorHandler_v14.bas` | Error handling |
-| `mod_FormHelpers_v14.bas` | Form helpers |
-| `mod_Invoice_v14.bas` | Invoice generation |
-| `mod_MasterSetup_v14.bas` | Master setup |
-| `mod_PurchaseOrder_v14.bas` | Purchase orders |
-| `mod_StockEntryHelpers.bas` | Stock entry helpers |
-| `mod_Branding.bas` | Version info, about dialog, branding colors |
-| `mod_Splash.bas` | Splash screen, loading indicators, branded messages |
+---
 
-## Data
+## Quick Start
 
-- 40 hardware articles across 6 categories
-- 9 Algerian suppliers with NIF/NIS/RC tax IDs
-- 90-day movement patterns (spring season)
+### 1. Download
+```bash
+git clone https://github.com/kamelmh/academix-dss-hardware.git
+```
 
-## Import
+### 2. Open
+- Open `ERP_dss_v13.4_hardware_store.xlsm` in Excel 2016+
+- Enable macros when prompted
+- Trust VBA project access: `File > Options > Trust Center > Macro Settings > Trust access to VBA project object model`
 
-See `docs/IMPORT_INSTRUCTIONS.md` for VBA import steps.
+### 3. Start
+- Follow the first-run wizard
+- 40 demo articles pre-loaded
+- Start managing your inventory!
 
-## Dependencies
+---
 
-- Excel 2010+ (VBA host)
-- No external libraries
+## Screenshots
+
+| Dashboard | Reports | Alerts |
+|-----------|---------|--------|
+| ![Dashboard](docs/screenshots/EXCEL_0bdi9zE94p.png) | ![Reports](docs/screenshots/EXCEL_4BmvZMjwIV.png) | ![Alerts](docs/screenshots/EXCEL_95N1mRFEij.png) |
+
+---
+
+## Demo
+
+### Live Streamlit Dashboard
+**https://academix-dss-hardware.streamlit.app**
+
+- **Home** — Overview and quick links
+- **Dashboard** — Real-time KPIs, charts, alerts
+- **Interactive Demo** — Step-by-step walkthrough
+- **Contact** — Get in touch
+
+### Landing Page
+**https://academixdss-9jayh829.manus.space**
+
+---
+
+## Installation
+
+### System Requirements
+- Windows 7 or later
+- Microsoft Excel 2016 or later
+- 50 MB free disk space
+- Macro support enabled
+
+### First-Time Setup
+1. Copy `ERP_dss_v13.4_hardware_store.xlsm` to your computer
+2. Open with Excel 2016 or later
+3. Enable macros when prompted
+4. **Important:** Trust VBA project access:
+   - `File > Options > Trust Center > Trust Center Settings > Macro Settings`
+   - Check **"Trust access to VBA project object model"**
+5. Follow the setup wizard
+6. Start using the system!
+
+---
+
+## Project Structure
+
+```
+academix-dss-hardware/
+├── ERP_dss_v13.4_hardware_store.xlsm    # Main application
+├── modules/                              # 32 VBA modules
+│   ├── mod_Config.bas                   # Configuration & constants
+│   ├── mod_Dashboard.bas                # Dashboard & KPIs
+│   ├── mod_StockEngine.bas              # Stock management
+│   ├── mod_AuditTrail.bas               # Audit logging
+│   └── ...                              # 28 more modules
+├── streamlit-dashboard/                 # Demo dashboard (Python)
+│   ├── app.py                           # Main entry
+│   └── pages/                           # 4 pages
+├── tools/                               # Maintenance scripts
+│   ├── maintenance.py                   # Consolidated maintenance
+│   ├── import_nuclear.py                # Module importer
+│   └── package_sellable.py              # Package builder
+├── dist/                                # Distribution files
+├── docs/                                # Documentation
+└── contact-form/                        # Contact form (HTML)
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [USER_GUIDE.md](docs/USER_GUIDE.md) | Complete user manual |
+| [FIRST_RUN.md](docs/FIRST_RUN.md) | First-run setup guide |
+| [SELLABLE_PACKAGE.md](docs/SELLABLE_PACKAGE.md) | Package & pricing guide |
+| [AI_ROADMAP.md](docs/AI_ROADMAP.md) | 3-tier AI strategy |
+| [ACADEMIX_SALES_PLAYBOOK.md](ACADEMIX_SALES_PLAYBOOK.md) | Sales scripts & templates |
+
+---
+
+## Pricing
+
+### Score-Based Pricing (Launch)
+| Milestone | Price | Articles |
+|-----------|-------|----------|
+| **First 10 customers** | 15,000 DZD | Up to 100 |
+| After 10 customers | 25,000 DZD | Up to 500 |
+| After 25 customers | 45,000 DZD | Unlimited |
+| After 50 customers | 60,000+ DZD | Unlimited |
+
+### Add-Ons
+| Service | Price |
+|---------|-------|
+| On-site training (2h) | 5,000 DZD |
+| Custom branding | 10,000 DZD |
+| Additional user license | 10,000 DZD |
+| Annual support renewal | 8,000 DZD |
+
+---
+
+## Tech Stack
+
+- **Frontend:** Excel VBA + UserForms (8 forms)
+- **Backend:** 32 VBA modules
+- **Database:** Excel sheets (11 sheets)
+- **Demo:** Streamlit (Python)
+- **Deploy:** Local .xlsm files
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
 
 ## License
 
-MIT — Mahi Kamel Abdelghani
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Contact
+
+**Mahi Kamel Abdelghani**
+- Email: kamelmahi71@gmail.com
+- Phone: +213 676 77 38 92
+- GitHub: [kamelmh](https://github.com/kamelmh)
+- Portfolio: [kamelmahi.netlify.app](https://kamelmahi.netlify.app)
+- LinkedIn: [Mahi Kamel](https://linkedin.com/in/mahikamel)
+
+---
+
+## Support
+
+If you find this project helpful, please give it a star on GitHub!

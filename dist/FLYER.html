@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Academix DSS - Flyer</title>
+<style>
+body { font-family: Calibri, sans-serif; max-width: 210mm; margin: 0 auto; padding: 20mm; }
+.flyer { border: 3px solid #1E3C72; padding: 20px; text-align: center; }
+h1 { color: #1E3C72; font-size: 28px; margin: 10px 0; }
+h2 { color: #465A82; font-size: 18px; margin: 5px 0; }
+.price { font-size: 36px; color: #E74C3C; font-weight: bold; margin: 20px 0; }
+.features { text-align: left; margin: 20px 0; }
+.feature { padding: 5px 0; font-size: 14px; }
+.feature:before { content: "✓ "; color: #27AE60; font-weight: bold; }
+.contact { background: #1E3C72; color: white; padding: 15px; margin-top: 20px; }
+.contact p { margin: 5px 0; }
+.urgent { background: #E74C3C; color: white; padding: 10px; font-weight: bold; margin-top: 10px; }
+@media print {
+  body { padding: 10mm; }
+  .flyer { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="flyer">
+  <h1>ACADEMIX DSS</h1>
+  <h2>Systeme de Gestion d'Inventaire</h2>
+  <p>Pour Quincailleries & Magasins</p>
+  
+  <div class="price">15,000 DZD</div>
+  <p><em>Prix de lancement — premiers 10 clients</em></p>
+  
+  <div class="features">
+    <div class="feature">Gestion des articles et fournisseurs</div>
+    <div class="feature">Calcul automatique du CMUP</div>
+    <div class="feature">Classification ABC</div>
+    <div class="feature">Impression codes-barres</div>
+    <div class="feature">Facturation et bons de reception</div>
+    <div class="feature">Tableau de bord en temps reel</div>
+    <div class="feature">Rapports et statistiques</div>
+    <div class="feature">Sauvegarde automatique</div>
+  </div>
+  
+  <div class="urgent">
+    Prix qui monte apres 10 clients!<br>
+    Profitez maintenant!
+  </div>
+  
+  <div class="contact">
+    <p><strong>Kamel Mahi</strong> — Informaticien</p>
+    <p>WhatsApp: 0676 77 38 92</p>
+    <p>Email: kamelmahi71@gmail.com</p>
+    <p>El Bayadh, Algerie</p>
+  </div>
+</div>
+</body>
+</html>

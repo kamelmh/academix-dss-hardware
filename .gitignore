@@ -5,23 +5,15 @@ Desktop.ini
 
 # Backups
 Academix_Backups/
-test_academix/Academix_Backups/
 *.backup
 *.bak
 
 # Temp
 *.tmp
-*.bak
 *~lock~
 ~$*
 *.swp
 *.swo
-
-# Root .xhtml (kept in docs/ and test_academix/)
-/*.xhtml
-
-# Local Netlify folder
-.netlify
 
 # Python
 __pycache__/
@@ -30,13 +22,8 @@ __pycache__/
 *.pyd
 .Python
 *.egg-info/
-dist/
 build/
 *.egg
-
-# Node
-node_modules/
-package-lock.json
 
 # IDE
 .vscode/
@@ -52,21 +39,6 @@ logs/
 .env.local
 .env.*.local
 
-# OS specific
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary files
-*.tmp
-*.temp
-*.log
-*.cache
-
 # Screenshots (keep only in docs/screenshots/)
 *.png
 *.jpg
@@ -75,4 +47,10 @@ Thumbs.db
 
 # Build artifacts
 MANUS_PACKAGE_ACADEMIX_DSS.zip
-dist.zip
+
+# Netlify
+.netlify/
+
+# Streamlit
+streamlit-dashboard/.venv/
+streamlit-dashboard/__pycache__/

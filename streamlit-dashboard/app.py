@@ -16,6 +16,33 @@ st.markdown("""
         text-align: center;
         margin-bottom: 2rem;
     }
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .main-header { font-size: 1.8rem; }
+        .stMetric { padding: 0.5rem; }
+        .stColumns { flex-wrap: wrap; }
+    }
+    /* Feature cards */
+    .feature-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 0.5rem 0;
+        transition: transform 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    /* CTA button */
+    .stButton > button {
+        background: #1e40af;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        width: 100%;
+    }
+    .stButton > button:hover { background: #1e3a5f; }
 </style>
 """, unsafe_allow_html=True)
 
