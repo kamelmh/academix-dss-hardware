@@ -179,7 +179,7 @@ st.dataframe(transactions, use_container_width=True)
 st.divider()
 st.markdown("### 💡 Vous aimez ce que vous voyez ?")
 st.markdown("Testez Academix DSS avec vos propres données de stock.")
-st.page_link("pages/2_Contact.py", label="📞 Demander une démo gratuite", icon="→")
+st.page_link("pages/2_Contact.py", label="📞 Demander une démo gratuite")
 
 st.divider()
 st.caption("© 2026 Academix DSS — Système de Gestion de Stock pour Quincailleries en Algérie")

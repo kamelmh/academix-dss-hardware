@@ -144,7 +144,7 @@ with col_info:
     st.divider()
 
     st.subheader("📊 Voir la démo")
-    st.page_link("pages/1_Tableau_de_Bord.py", label="📊 Tableau de bord interactif", icon="→")
+    st.page_link("pages/1_Tableau_de_Bord.py", label="📊 Tableau de bord interactif")
 
 st.divider()
 st.caption("© 2026 Academix DSS — Système de Gestion de Stock pour Quincailleries en Algérie")

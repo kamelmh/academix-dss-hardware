@@ -29,12 +29,12 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("### 📊 Tableau de Bord")
     st.markdown("Visualisez vos stocks, alertes et performances en temps réel.")
-    st.page_link("pages/1_Tableau_de_Bord.py", label="→ Ouvrir le tableau de bord", icon="📊")
+    st.page_link("pages/1_Tableau_de_Bord.py", label="→ Ouvrir le tableau de bord")
 
 with col2:
     st.markdown("### 📞 Demander une Démo")
     st.markdown("Testez Academix DSS avec vos propres données de stock.")
-    st.page_link("pages/2_Contact.py", label="→ Demander une démo gratuite", icon="📞")
+    st.page_link("pages/2_Contact.py", label="→ Demander une démo gratuite")
 
 st.divider()
 
