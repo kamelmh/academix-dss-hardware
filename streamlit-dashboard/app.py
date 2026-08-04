@@ -144,7 +144,7 @@ def load_sample_data():
     transactions = pd.DataFrame({
         'Date': [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(20)],
         'Produit': random.sample(products['Nom'].tolist(), 20),
-        'Type': random.sample(['Entrée', 'Sortie', 'Entrée', 'Sortie', 'Entrée'], 20),
+        'Type': [random.choice(['Entrée', 'Sortie']) for _ in range(20)],
         'Quantité': [random.randint(10, 500) for _ in range(20)],
         'Montant': [random.randint(5000, 500000) for _ in range(20)]
     })
