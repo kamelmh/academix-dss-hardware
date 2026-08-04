@@ -24,14 +24,19 @@ st.markdown("### Système de Gestion de Stock pour Quincailleries en Algérie")
 
 st.divider()
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
+    st.markdown("### 🎯 Démo Interactive")
+    st.markdown("Explorez les fonctionnalités pas à pas.")
+    st.page_link("pages/3_Demo_Interactif.py", label="→ Lancer la démo interactive")
+
+with col2:
     st.markdown("### 📊 Tableau de Bord")
     st.markdown("Visualisez vos stocks, alertes et performances en temps réel.")
     st.page_link("pages/1_Tableau_de_Bord.py", label="→ Ouvrir le tableau de bord")
 
-with col2:
+with col3:
     st.markdown("### 📞 Demander une Démo")
     st.markdown("Testez Academix DSS avec vos propres données de stock.")
     st.page_link("pages/2_Contact.py", label="→ Demander une démo gratuite")

@@ -161,7 +161,8 @@ Bonjour [Nom],
 Merci pour votre intérêt pour Academix DSS !
 
 Pour info :
-- 📊 Démo live : https://academix-dss-hardware.streamlit.app/1_Tableau_de_Bord
+- 🎯 Démo interactive (pas à pas) : https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+- 📊 Tableau de bord live : https://academix-dss-hardware.streamlit.app/1_Tableau_de_Bord
 - 📝 Formulaire : https://academix-dss-hardware.streamlit.app/2_Contact
 
 Vous pouvez tester la démo librement. Si vous avez des questions, 
@@ -181,8 +182,11 @@ Bonjour [Nom],
 Je me permets de revenir vers vous concernant Academix DSS.
 
 Si le timing n'est pas le moment, pas de souci !
-Je laisse la démo ici au cas où :
+Je laisse la démo interactive ici au cas où :
 
+🎯 https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+
+Ou le tableau de bord live :
 📊 https://academix-dss-hardware.streamlit.app/1_Tableau_de_Bord
 
 Bonne continuation !
@@ -200,8 +204,11 @@ C'est Kamel, développeur d'Academix DSS (gestion de stock pour
 quincailleries).
 
 J'ai vu votre message sur [groupe Facebook] et je voulais vous 
-montrer la démo live :
+montrer la démo interactive :
 
+🎯 https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+
+Ou le tableau de bord live :
 📊 https://academix-dss-hardware.streamlit.app/1_Tableau_de_Bord
 
 Si ça vous intéresse, je peux vous faire une démo personnalisée 
@@ -219,7 +226,10 @@ Bonjour [Nom] ! 🎉
 
 Merci pour votre demande de démo !
 
-Voici le lien vers la démo live :
+Voici le lien vers la démo interactive (pas à pas) :
+🎯 https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+
+Ou le tableau de bord live :
 📊 https://academix-dss-hardware.streamlit.app/1_Tableau_de_Bord
 
 Et le formulaire si vous voulez réserver un créneau :
@@ -266,13 +276,59 @@ Kamel
 
 ---
 
+## 🎯 Post 4: Group Post — Interactive Demo Angle
+
+### French Version
+
+```
+🎯 Nouveau ! Démo interactive Academix DSS
+
+Vous voulez comprendre comment Academix DSS fonctionne ?
+
+J'ai créé une démo interactive qui vous guide pas à pas :
+1️⃣ Le problème que résout Academix
+2️⃣ Les fonctionnalités clés
+3️⃣ Les résultats concrets
+4️⃣ Comment contacter pour une démo gratuite
+
+📊 Essayez maintenant :
+https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+
+⏱️ 5 minutes suffisent pour comprendre !
+
+Qui veut essayer ? 🙋
+```
+
+### Arabic Version
+
+```
+🎯 جديد ! عرض توضيحي تفاعلي لأكاديمكس DSS
+
+تريد أن تفهم كيف يعمل أكاديمكس DSS ؟
+
+لقد أنشأت عرضا توضيحيا تفاعليا يرشدك خطوة بخطوة :
+1️⃣ المشكلة التي يحلها أكاديمكس
+2️⃣ الميزات الرئيسية
+3️⃣ النتائج الملموسة
+4️⃣ كيفية التواصل للحصول على عرض مجاني
+
+📊 جرب الآن :
+https://academix-dss-hardware.streamlit.app/3_Demo_Interactif
+
+⏱️ 5 دقائق تكفي للفهم !
+
+من يريد التجربة ؟ 🙋
+```
+
+---
+
 ## 🎯 Posting Strategy
 
 ### Daily Routine (15 minutes/day)
 
 | Time | Action |
 |------|--------|
-| **9:00** | Post in 1001 Quincaillerie (rotate posts 1-3) |
+| **9:00** | Post in quincaillerie group (rotate posts 1-4) |
 | **12:00** | DM 3 store owners (use DM Template 1) |
 | **15:00** | Check notifications, respond to comments |
 | **18:00** | Follow up with DMs (use DM Template 3) |

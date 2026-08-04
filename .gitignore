@@ -1,16 +1,78 @@
 # OS
 Thumbs.db
 .DS_Store
+Desktop.ini
 
 # Backups
 Academix_Backups/
 test_academix/Academix_Backups/
+*.backup
+*.bak
 
 # Temp
 *.tmp
 *.bak
 *~lock~
 ~$*
+*.swp
+*.swo
 
 # Root .xhtml (kept in docs/ and test_academix/)
 /*.xhtml
+
+# Local Netlify folder
+.netlify
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Screenshots (keep only in docs/screenshots/)
+*.png
+*.jpg
+*.jpeg
+!docs/screenshots/
+
+# Build artifacts
+MANUS_PACKAGE_ACADEMIX_DSS.zip
+dist.zip
