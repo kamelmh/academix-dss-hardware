@@ -123,7 +123,7 @@ def load_sample_data():
     # Calculate additional metrics
     products['Valeur_Stock'] = products['Prix_Unitaire'] * products['Stock_Actuel']
     products['CMUP'] = products['Prix_Unitaire'] * 0.92  # Simulated CMUP
-    products['Rotation'] = random.sample(range(2, 15), len(products))
+    products['Rotation'] = [random.randint(2, 15) for _ in range(len(products))]
     
     # ABC Classification
     total_value = products['Valeur_Stock'].sum()
